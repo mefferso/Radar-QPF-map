@@ -29,26 +29,30 @@
     }
 
     .panel {
-      padding: 11px 12px;
-      font-size: 13px;
-      width: 285px;
+      padding: 9px 10px;
+      font-size: 12px;
+      width: 235px;
+    }
+
+    .leaflet-top.leaflet-left .panel {
+      margin-top: 8px;
     }
 
     .panel h1 {
-      margin: 0 0 8px 0;
-      font-size: 16px;
+      margin: 0 0 7px 0;
+      font-size: 15px;
       line-height: 1.15;
     }
 
     .panel label {
       display: block;
-      margin: 6px 0;
+      margin: 5px 0;
       cursor: pointer;
     }
 
     .panel .section {
-      margin-top: 10px;
-      padding-top: 9px;
+      margin-top: 8px;
+      padding-top: 8px;
       border-top: 1px solid #ddd;
     }
 
@@ -59,18 +63,19 @@
     }
 
     .panel button {
-      margin-top: 7px;
-      padding: 5px 9px;
+      margin-top: 6px;
+      padding: 4px 8px;
       border: 1px solid #777;
       border-radius: 4px;
       background: #f6f6f6;
       cursor: pointer;
+      font-size: 12px;
     }
 
     .status {
-      margin-top: 8px;
-      font-size: 11px;
-      line-height: 1.3;
+      margin-top: 7px;
+      font-size: 10px;
+      line-height: 1.25;
       color: #333;
     }
 
@@ -158,12 +163,76 @@
       color: #333;
     }
 
+    .city-label {
+      pointer-events: none;
+    }
+
+    .city-text {
+      color: #ffffff;
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 0.2px;
+      white-space: nowrap;
+      text-shadow:
+        -1px -1px 0 #000,
+         1px -1px 0 #000,
+        -1px  1px 0 #000,
+         1px  1px 0 #000,
+         0 0 4px #000;
+    }
+
+    .city-dot {
+      display: inline-block;
+      width: 5px;
+      height: 5px;
+      background: #fff;
+      border: 1px solid #000;
+      border-radius: 50%;
+      margin-right: 4px;
+      vertical-align: middle;
+      box-shadow: 0 0 3px #000;
+    }
+
+    .interstate-shield {
+      pointer-events: none;
+      width: 34px;
+      height: 24px;
+      border-radius: 5px 5px 8px 8px;
+      background: #174a9c;
+      border: 2px solid #ffffff;
+      color: #ffffff;
+      font-size: 12px;
+      font-weight: 900;
+      line-height: 24px;
+      text-align: center;
+      text-shadow: 0 1px 1px #000;
+      box-shadow: 0 0 3px #000;
+      position: relative;
+    }
+
+    .interstate-shield::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      height: 6px;
+      background: #c51f2d;
+      border-radius: 3px 3px 0 0;
+    }
+
+    .interstate-shield span {
+      position: relative;
+      z-index: 1;
+    }
+
     .leaflet-control-attribution { font-size: 10px; }
 
     @media (max-width: 700px) {
       .legend { width: 92vw; }
       .legend-labels { font-size: 8px; }
-      .panel { width: 260px; }
+      .panel { width: 225px; }
+      .city-text { font-size: 11px; }
     }
   </style>
 </head>
@@ -179,27 +248,26 @@
       preferCanvas: true
     });
 
+    map.createPane('weatherPane');
+    map.getPane('weatherPane').style.zIndex = 450;
+
+    map.createPane('referencePane');
+    map.getPane('referencePane').style.zIndex = 700;
+    map.getPane('referencePane').style.pointerEvents = 'none';
+
+    map.createPane('cityPane');
+    map.getPane('cityPane').style.zIndex = 760;
+    map.getPane('cityPane').style.pointerEvents = 'none';
+
     const LOCAL_BBOX = { west: -92.4, east: -86.5, south: 28.4, north: 32.4 };
     const COUNTY_GEOJSON_URL = 'https://raw.githubusercontent.com/plotly/datasets/master/geojson-counties-fips.json';
     const LAKES_GEOJSON_URL = 'https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_10m_lakes.geojson';
     const MRMS_ARCGIS_URL = 'https://mapservices.weather.noaa.gov/raster/rest/services/obs/mrms_qpe/MapServer';
 
-    const baseMap = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+    // Clean basemap: lakes/water visible, but not every damn driveway and subdivision road label.
+    const baseMap = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
       maxZoom: 19,
-      attribution: 'Tiles &copy; Esri'
-    }).addTo(map);
-
-    // Roads/interstates and city labels stay above radar so the map does not turn into unreadable radar soup.
-    const roadOverlay = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}', {
-      maxZoom: 19,
-      zIndex: 700,
-      attribution: 'Transportation &copy; Esri'
-    }).addTo(map);
-
-    const labelOverlay = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
-      maxZoom: 19,
-      zIndex: 710,
-      attribution: 'Labels &copy; Esri'
+      attribution: 'Base &copy; Esri'
     }).addTo(map);
 
     const RADARS = {
@@ -212,8 +280,6 @@
       DAA: { label: '1 Hour Precip', radarLayerCode: 'boha', units: 'in' }
     };
 
-    // Radar.weather.gov-style precip scale in inches.
-    // This drives BOTH the horizontal legend and the pixel-color cursor readout.
     const PRECIP_SCALE = [
       { value: 0.0, label: '0', color: '#000000' },
       { value: 0.1, label: '.1', color: '#3b3b3b' },
@@ -243,11 +309,12 @@
       weatherLayer: null,
       countyLayer: null,
       lakeLayer: null,
+      interstateLayer: null,
+      cityLayer: null,
       pinned: false,
       pinMarker: null,
       querySeq: 0,
-      lastMoveQuery: 0,
-      lastSampleStatus: ''
+      lastMoveQuery: 0
     };
 
     const sampleCanvas = document.createElement('canvas');
@@ -263,11 +330,7 @@
     }
 
     function colorDistance(a, b) {
-      return Math.sqrt(
-        Math.pow(a.r - b.r, 2) +
-        Math.pow(a.g - b.g, 2) +
-        Math.pow(a.b - b.b, 2)
-      );
+      return Math.sqrt(Math.pow(a.r - b.r, 2) + Math.pow(a.g - b.g, 2) + Math.pow(a.b - b.b, 2));
     }
 
     function nearestScaleColor(r, g, b) {
@@ -283,7 +346,6 @@
         }
       });
 
-      // If the pixel is basically basemap gray/brown or anti-aliased junk, do not pretend it is rain.
       if (!best || bestDistance > 105) return null;
       return best;
     }
@@ -334,7 +396,7 @@
         state.weatherLayer = new ArcGisDynamicLayer({
           opacity: state.opacity,
           tileSize: 256,
-          zIndex: 450,
+          pane: 'weatherPane',
           attribution: 'NOAA / NWS MRMS QPE'
         }).addTo(map);
         setStatus(`<span class="good">Layer:</span> MRMS QPE`);
@@ -346,7 +408,7 @@
           transparent: true,
           version: '1.1.1',
           opacity: state.opacity,
-          zIndex: 450,
+          pane: 'weatherPane',
           crossOrigin: 'anonymous',
           attribution: 'NOAA / NWS NEXRAD Level III'
         }).addTo(map);
@@ -404,9 +466,7 @@
 
       const tileRecord = state.weatherLayer._tiles[key];
       const tile = tileRecord && tileRecord.el;
-      if (!tile || !tile.complete || !tile.naturalWidth || !tile.naturalHeight) {
-        return { ok: false, reason: 'tile not loaded yet' };
-      }
+      if (!tile || !tile.complete || !tile.naturalWidth || !tile.naturalHeight) return { ok: false, reason: 'tile not loaded yet' };
 
       const rawX = point.x - tileCoords.x * tileSize.x;
       const rawY = point.y - tileCoords.y * tileSize.y;
@@ -424,9 +484,7 @@
         if (a < 10) return { ok: true, empty: true, reason: 'transparent/no echo' };
 
         const match = nearestScaleColor(r, g, b);
-        if (!match) {
-          return { ok: true, empty: true, reason: `unmatched pixel rgb(${r},${g},${b})` };
-        }
+        if (!match) return { ok: true, empty: true, reason: `unmatched pixel rgb(${r},${g},${b})` };
 
         return { ok: true, empty: false, match, rgb: { r, g, b, a } };
       } catch (err) {
@@ -441,26 +499,15 @@
       if (seq !== state.querySeq) return;
 
       if (sampled.ok && !sampled.empty) {
-        updateReadout(
-          latlng,
-          binTextForScaleItem(sampled.match),
-          sampled.match.color,
-          `${state.source} ${PRODUCTS[state.product].label} · sampled display color`
-        );
+        updateReadout(latlng, binTextForScaleItem(sampled.match), sampled.match.color, `${state.source} ${PRODUCTS[state.product].label} · sampled display color`);
         return;
       }
 
       if (sampled.ok && sampled.empty) {
-        updateReadout(
-          latlng,
-          'No data',
-          '#555',
-          `${state.source} ${PRODUCTS[state.product].label} · ${sampled.reason}`
-        );
+        updateReadout(latlng, 'No data', '#555', `${state.source} ${PRODUCTS[state.product].label} · ${sampled.reason}`);
         return;
       }
 
-      // Last resort. Some browsers/services may block canvas sampling. Try service identify, but do not fake values.
       if (state.source === 'MRMS') queryMrmsIdentify(latlng, seq, sampled.reason);
       else queryWmsFeatureInfo(latlng, seq, sampled.reason);
     }
@@ -556,9 +603,7 @@
 
     function nearestValueToScale(value) {
       let item = PRECIP_SCALE[0];
-      for (const scaleItem of PRECIP_SCALE) {
-        if (value >= scaleItem.value) item = scaleItem;
-      }
+      for (const scaleItem of PRECIP_SCALE) if (value >= scaleItem.value) item = scaleItem;
       return { text: binTextForScaleItem({ ...item, index: PRECIP_SCALE.indexOf(item) }), color: item.color };
     }
 
@@ -566,9 +611,7 @@
       document.getElementById('legend-title').textContent = state.source === 'MRMS'
         ? `MRMS QPE / ${PRODUCTS[state.product].label}`
         : `${state.source} ${PRODUCTS[state.product].label}`;
-
-      const labels = PRECIP_SCALE.map(item => `<span>${item.label}</span>`).join('');
-      document.getElementById('legend-labels').innerHTML = labels;
+      document.getElementById('legend-labels').innerHTML = PRECIP_SCALE.map(item => `<span>${item.label}</span>`).join('');
     }
 
     function featureTouchesLocalBbox(feature) {
@@ -594,12 +637,8 @@
           const filtered = { type: 'FeatureCollection', features: geojson.features.filter(featureTouchesLocalBbox) };
           state.countyLayer = L.geoJSON(filtered, {
             interactive: false,
-            style: {
-              color: '#000000',
-              weight: 1.1,
-              opacity: 0.85,
-              fillOpacity: 0
-            }
+            pane: 'referencePane',
+            style: { color: '#000000', weight: 1.1, opacity: 0.85, fillOpacity: 0 }
           }).addTo(map);
           bringReferenceFront();
         })
@@ -613,27 +652,91 @@
           const filtered = { type: 'FeatureCollection', features: geojson.features.filter(featureTouchesLocalBbox) };
           state.lakeLayer = L.geoJSON(filtered, {
             interactive: false,
-            style: {
-              color: '#000000',
-              weight: 0.9,
-              opacity: 0.75,
-              fillOpacity: 0
-            }
+            pane: 'referencePane',
+            style: { color: '#000000', weight: 1.0, opacity: 0.8, fillOpacity: 0 }
           }).addTo(map);
           bringReferenceFront();
         })
         .catch(() => console.warn('Lake outlines failed to load'));
     }
 
+    function addInterstates() {
+      if (state.interstateLayer && map.hasLayer(state.interstateLayer)) map.removeLayer(state.interstateLayer);
+      const layer = L.layerGroup([], { pane: 'referencePane' });
+
+      const routes = [
+        { name: '10', coords: [[30.45,-91.19],[30.39,-90.92],[30.25,-90.63],[30.08,-90.48],[29.98,-90.22],[29.95,-90.07],[30.03,-89.93],[30.22,-89.78],[30.31,-89.54],[30.34,-89.32],[30.39,-89.09],[30.41,-88.89],[30.42,-88.69],[30.45,-88.43],[30.69,-88.04],[30.68,-87.75]], labels: [[30.06,-90.42],[30.31,-89.55],[30.42,-88.75]] },
+        { name: '12', coords: [[30.45,-91.19],[30.43,-90.95],[30.42,-90.72],[30.43,-90.50],[30.50,-90.25],[30.48,-90.03],[30.30,-89.78]], labels: [[30.44,-90.55],[30.42,-90.03]] },
+        { name: '55', coords: [[30.05,-90.47],[30.20,-90.46],[30.36,-90.47],[30.52,-90.46],[30.77,-90.45],[31.00,-90.46],[31.35,-90.45]], labels: [[30.32,-90.47],[30.89,-90.46]] },
+        { name: '59', coords: [[30.30,-89.78],[30.47,-89.73],[30.66,-89.66],[30.88,-89.56],[31.12,-89.42],[31.33,-89.29]], labels: [[30.63,-89.68],[31.12,-89.42]] },
+        { name: '65', coords: [[30.69,-88.04],[30.86,-88.02],[31.05,-88.02],[31.24,-87.96],[31.42,-87.88]], labels: [[31.02,-88.02]] }
+      ];
+
+      routes.forEach(route => {
+        L.polyline(route.coords, { pane: 'referencePane', color: '#ffffff', weight: 6, opacity: 0.95, interactive: false }).addTo(layer);
+        L.polyline(route.coords, { pane: 'referencePane', color: '#d64f1f', weight: 3, opacity: 0.95, interactive: false }).addTo(layer);
+        route.labels.forEach(point => {
+          L.marker(point, {
+            pane: 'cityPane',
+            interactive: false,
+            icon: L.divIcon({
+              className: '',
+              html: `<div class="interstate-shield"><span>${route.name}</span></div>`,
+              iconSize: [34, 24],
+              iconAnchor: [17, 12]
+            })
+          }).addTo(layer);
+        });
+      });
+
+      state.interstateLayer = layer.addTo(map);
+      bringReferenceFront();
+    }
+
+    function addCityLabels() {
+      if (state.cityLayer && map.hasLayer(state.cityLayer)) map.removeLayer(state.cityLayer);
+      const cities = [
+        { name: 'Baton Rouge', coords: [30.4515, -91.1871] },
+        { name: 'New Orleans', coords: [29.9511, -90.0715] },
+        { name: 'Hammond', coords: [30.5044, -90.4612] },
+        { name: 'Covington', coords: [30.4755, -90.1009] },
+        { name: 'Slidell', coords: [30.2752, -89.7812] },
+        { name: 'Picayune', coords: [30.5255, -89.6795] },
+        { name: 'Bogalusa', coords: [30.7910, -89.8487] },
+        { name: 'Bay St. Louis', coords: [30.3088, -89.3300] },
+        { name: 'Gulfport', coords: [30.3674, -89.0928] },
+        { name: 'Biloxi', coords: [30.3960, -88.8853] },
+        { name: 'Pascagoula', coords: [30.3658, -88.5561] },
+        { name: 'Mobile', coords: [30.6954, -88.0399] },
+        { name: 'Hattiesburg', coords: [31.3271, -89.2903] },
+        { name: 'McComb', coords: [31.2446, -90.4532] }
+      ];
+
+      state.cityLayer = L.layerGroup(cities.map(city =>
+        L.marker(city.coords, {
+          pane: 'cityPane',
+          interactive: false,
+          icon: L.divIcon({
+            className: 'city-label',
+            html: `<div class="city-text"><span class="city-dot"></span>${city.name}</div>`,
+            iconSize: [120, 18],
+            iconAnchor: [4, 9]
+          })
+        })
+      )).addTo(map);
+
+      bringReferenceFront();
+    }
+
     function bringReferenceFront() {
       if (state.lakeLayer) state.lakeLayer.bringToFront();
       if (state.countyLayer) state.countyLayer.bringToFront();
-      if (roadOverlay) roadOverlay.bringToFront();
-      if (labelOverlay) labelOverlay.bringToFront();
+      if (state.interstateLayer) state.interstateLayer.eachLayer(layer => layer.bringToFront && layer.bringToFront());
+      if (state.cityLayer) state.cityLayer.eachLayer(layer => layer.setZIndexOffset && layer.setZIndexOffset(1000));
     }
 
     const Controls = L.Control.extend({
-      options: { position: 'topright' },
+      options: { position: 'topleft' },
       onAdd: function() {
         const div = L.DomUtil.create('div', 'panel');
         div.innerHTML = `
@@ -676,7 +779,7 @@
           <strong>Cursor Readout</strong>
           <div id="readout-value" class="value">Move cursor</div>
           <div id="readout-coords" class="coords">--</div>
-          <div id="readout-meta" class="meta">Samples displayed pixel color. Click map to pin; click again to unpin.</div>
+          <div id="readout-meta" class="meta">Samples displayed radar pixel color. Click map to pin; click again to unpin.</div>
         `;
         L.DomEvent.disableClickPropagation(div);
         L.DomEvent.disableScrollPropagation(div);
@@ -755,7 +858,7 @@
         weight: 2,
         fillColor: '#fff',
         fillOpacity: 1,
-        zIndex: 1200
+        pane: 'cityPane'
       }).addTo(map);
       queryAt(e.latlng);
       document.getElementById('readout-meta').textContent = 'Pinned point. Click map again to unpin.';
@@ -764,6 +867,8 @@
     loadWeatherLayer();
     loadCountyBoundaries();
     loadLakes();
+    addInterstates();
+    addCityLabels();
   </script>
 </body>
 </html>

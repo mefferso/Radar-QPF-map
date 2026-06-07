@@ -1,336 +1,51 @@
-<!DOCTYPE html>
-<html lang='en'>
+<!doctype html>
+<html lang="en">
 <head>
-  <meta charset='utf-8'>
-  <meta name='viewport' content='width=device-width, initial-scale=1.0'>
-  <title>Radar / MRMS Precip Accumulation</title>
-  <link rel='stylesheet' href='https://unpkg.com/leaflet@1.9.4/dist/leaflet.css'>
-  <style>
-    html, body, #map { height: 100%; width: 100%; margin: 0; padding: 0; font-family: Arial, Helvetica, sans-serif; }
-    .leaflet-container { background: #f7f7f7; }
-    .panel, .readout, .legend { background: rgba(255,255,255,0.96); border: 1px solid rgba(0,0,0,0.22); border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.25); color: #111; }
-    .panel { padding: 9px 10px; font-size: 12px; width: 235px; }
-    .leaflet-top.leaflet-left .panel { margin-top: 8px; }
-    .panel h1 { margin: 0 0 7px 0; font-size: 15px; line-height: 1.15; }
-    .panel label { display: block; margin: 5px 0; cursor: pointer; }
-    .panel .section { margin-top: 8px; padding-top: 8px; border-top: 1px solid #ddd; }
-    .panel select, .panel input[type='range'] { width: 100%; box-sizing: border-box; }
-    .panel button { margin-top: 6px; padding: 4px 8px; border: 1px solid #777; border-radius: 4px; background: #f6f6f6; cursor: pointer; font-size: 12px; }
-    .status { margin-top: 7px; font-size: 10px; line-height: 1.25; color: #333; }
-    .good { color: #08751f; font-weight: bold; }
-    .warn { color: #9a5700; font-weight: bold; }
-    .bad { color: #b00020; font-weight: bold; }
-    .readout { padding: 10px 12px; min-width: 255px; font-size: 13px; line-height: 1.3; }
-    .readout .value { font-size: 25px; font-weight: 800; margin: 3px 0 4px 0; }
-    .readout .coords, .readout .meta { font-size: 11px; color: #333; }
-    .legend { padding: 10px 12px; width: 520px; max-width: calc(100vw - 36px); font-size: 12px; }
-    .legend-title { font-weight: 800; font-size: 13px; margin-bottom: 7px; }
-    .legend-bar { height: 16px; border: 1px solid #333; background: linear-gradient(to right, #000000 0%, #3b3b3b 0.67%, #858585 2%, #ffffff 4%, #00ffff 6.67%, #00cc66 10%, #00ff00 13.33%, #bf00ff 16.67%, #ff00ff 20%, #3030ff 26.67%, #0000c8 33.33%, #ffff00 40%, #ffcc00 46.67%, #ff9900 53.33%, #ff6600 60%, #ff0000 66.67%, #b00000 80%, #6e0000 86.67%, #ffffff 100%); }
-    .legend-labels { display: grid; grid-template-columns: repeat(19, 1fr); gap: 0; margin-top: 3px; font-size: 10px; font-weight: 700; color: #222; line-height: 1; }
-    .legend-labels span { text-align: center; white-space: nowrap; }
-    .legend-note { margin-top: 6px; font-size: 11px; color: #333; }
-    .city-label { pointer-events: none; }
-    .city-text { color: #111; font-size: 18px; font-weight: 900; letter-spacing: 0.15px; white-space: nowrap; text-shadow: -2px -2px 0 #fff, 2px -2px 0 #fff, -2px 2px 0 #fff, 2px 2px 0 #fff, 0 0 6px #fff, 0 0 3px #fff; }
-    .city-dot { display: inline-block; width: 7px; height: 7px; background: #fff; border: 2px solid #000; border-radius: 50%; margin-right: 5px; vertical-align: middle; box-shadow: 0 0 4px #fff; }
-    .leaflet-control-attribution { font-size: 10px; }
-    @media (max-width: 700px) { .legend { width: 92vw; } .legend-labels { font-size: 8px; } .panel { width: 225px; } .city-text { font-size: 14px; } }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Radar / MRMS Precip Accumulation</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+html,body,#map{height:100%;width:100%;margin:0;font-family:Arial,Helvetica,sans-serif}.leaflet-container{background:#f7f7f7}.panel,.readout,.legend{background:rgba(255,255,255,.96);border:1px solid rgba(0,0,0,.25);border-radius:8px;box-shadow:0 2px 10px rgba(0,0,0,.25);color:#111}.panel{width:235px;padding:9px 10px;font-size:12px}.leaflet-top.leaflet-left .panel{margin-top:8px}.panel h1{margin:0 0 7px;font-size:15px}.panel label{display:block;margin:5px 0}.panel .section{margin-top:8px;padding-top:8px;border-top:1px solid #ddd}.panel select,.panel input[type=range]{width:100%;box-sizing:border-box}.panel button{margin-top:6px;padding:4px 8px;border:1px solid #777;border-radius:4px;background:#f6f6f6;cursor:pointer;font-size:12px}.status{margin-top:7px;font-size:10px;line-height:1.25}.good{color:#08751f;font-weight:700}.bad{color:#b00020;font-weight:700}.readout{padding:10px 12px;min-width:260px;font-size:13px}.readout .value{font-size:25px;font-weight:800;margin:3px 0}.readout .coords,.readout .meta{font-size:11px;color:#333}.legend{padding:10px 12px;max-width:560px}.legend-title{font-weight:800;font-size:13px;margin-bottom:7px}.legend img{display:block;max-width:540px;height:auto;background:white}.legend-note{margin-top:6px;font-size:11px;color:#333}.city-label{pointer-events:none}.city-text{color:#111;font-size:18px;font-weight:900;white-space:nowrap;text-shadow:-2px -2px 0 #fff,2px -2px 0 #fff,-2px 2px 0 #fff,2px 2px 0 #fff,0 0 6px #fff}.city-dot{display:inline-block;width:7px;height:7px;background:white;border:2px solid #000;border-radius:50%;margin-right:5px;vertical-align:middle}@media(max-width:700px){.panel{width:225px}.legend img{max-width:88vw}.city-text{font-size:14px}}
+</style>
 </head>
 <body>
-  <div id='map'></div>
-  <script src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'></script>
-  <script>
-    const map = L.map('map', { center: [30.35, -89.80], zoom: 8, preferCanvas: true });
-
-    map.createPane('weatherPane');
-    map.getPane('weatherPane').style.zIndex = 450;
-    map.createPane('referencePane');
-    map.getPane('referencePane').style.zIndex = 700;
-    map.getPane('referencePane').style.pointerEvents = 'none';
-    map.createPane('cityPane');
-    map.getPane('cityPane').style.zIndex = 760;
-    map.getPane('cityPane').style.pointerEvents = 'none';
-
-    const LOCAL_BBOX = { west: -92.5, east: -88.0, south: 28.5, north: 32.0 };
-    const COUNTY_GEOJSON_URL = 'https://raw.githubusercontent.com/plotly/datasets/master/geojson-counties-fips.json';
-    const LAKES_GEOJSON_URL = 'https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_10m_lakes.geojson';
-    const STATES_GEOJSON_URL = 'https://raw.githubusercontent.com/PublicaMundi/MappingAPI/master/data/geojson/us-states.json';
-    const NWS_REF_MAPSERVER = 'https://mapservices.weather.noaa.gov/static/rest/services/nws_reference_maps/nws_reference_map/MapServer';
-    const MRMS_ARCGIS_URL = 'https://mapservices.weather.noaa.gov/raster/rest/services/obs/mrms_qpe/MapServer';
-
-    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, attribution: 'Base &copy; Esri' }).addTo(map);
-
-    const RADARS = {
-      KHDC: { station: 'khdc', lat: 30.5195, lon: -90.4179 },
-      KMOB: { station: 'kmob', lat: 30.6794, lon: -88.2397 }
-    };
-
-    const PRODUCTS = {
-      DTA: { label: 'Storm Total Precip', radarLayerCode: 'bdsa' },
-      DAA: { label: '1 Hour Precip', radarLayerCode: 'boha' }
-    };
-
-    const LIX_CITIES = [
-      { name: 'Baton Rouge', coords: [30.4515, -91.1871] },
-      { name: 'New Orleans', coords: [29.9511, -90.0715] },
-      { name: 'Gulfport', coords: [30.3674, -89.0928] },
-      { name: 'McComb', coords: [31.2438, -90.4532] },
-      { name: 'Woodville', coords: [31.1046, -91.2993] },
-      { name: 'Hammond', coords: [30.5044, -90.4612] },
-      { name: 'Bogalusa', coords: [30.7910, -89.8487] },
-      { name: 'Houma', coords: [29.5958, -90.7195] },
-      { name: 'Covington', coords: [30.4755, -90.1009] },
-      { name: 'Mandeville', coords: [30.3583, -90.0656] },
-      { name: 'Slidell', coords: [30.2752, -89.7812] },
-      { name: 'Picayune', coords: [30.5255, -89.6795] },
-      { name: 'Poplarville', coords: [30.8402, -89.5342] },
-      { name: 'Franklinton', coords: [30.8471, -90.1531] },
-      { name: 'Amite', coords: [30.7266, -90.5087] },
-      { name: 'Greensburg', coords: [30.8307, -90.6718] },
-      { name: 'Gonzales', coords: [30.2385, -90.9201] },
-      { name: 'Laplace', coords: [30.0666, -90.4801] },
-      { name: 'Thibodaux', coords: [29.7958, -90.8229] },
-      { name: 'Galliano', coords: [29.4422, -90.2992] },
-      { name: 'Bay St. Louis', coords: [30.3088, -89.3300] },
-      { name: 'Waveland', coords: [30.2869, -89.3762] },
-      { name: 'Diamondhead', coords: [30.3946, -89.3639] },
-      { name: 'Biloxi', coords: [30.3960, -88.8853] },
-      { name: 'Ocean Springs', coords: [30.4113, -88.8278] },
-      { name: 'Pascagoula', coords: [30.3658, -88.5561] }
-    ];
-
-    const PRECIP_SCALE = [
-      { value: 0.0, label: '0', color: '#000000' }, { value: 0.1, label: '.1', color: '#3b3b3b' }, { value: 0.3, label: '.3', color: '#858585' }, { value: 0.6, label: '.6', color: '#ffffff' },
-      { value: 1.0, label: '1', color: '#00ffff' }, { value: 1.5, label: '1.5', color: '#00cc66' }, { value: 2.0, label: '2', color: '#00ff00' }, { value: 2.5, label: '2.5', color: '#bf00ff' },
-      { value: 3.0, label: '3', color: '#ff00ff' }, { value: 4.0, label: '4', color: '#3030ff' }, { value: 5.0, label: '5', color: '#0000c8' }, { value: 6.0, label: '6', color: '#ffff00' },
-      { value: 7.0, label: '7', color: '#ffcc00' }, { value: 8.0, label: '8', color: '#ff9900' }, { value: 9.0, label: '9', color: '#ff6600' }, { value: 10.0, label: '10', color: '#ff0000' },
-      { value: 12.0, label: '12', color: '#b00000' }, { value: 13.0, label: '13', color: '#6e0000' }, { value: 15.0, label: '15', color: '#ffffff' }
-    ];
-
-    const state = { source: 'KHDC', product: 'DTA', opacity: 0.72, weatherLayer: null, countyContextLayer: null, stateLayer: null, lakeLayer: null, wfoBoundaryLayer: null, cityLayer: null, pinned: false, pinMarker: null, querySeq: 0, lastMoveQuery: 0 };
-    const sampleCanvas = document.createElement('canvas');
-    const sampleCtx = sampleCanvas.getContext('2d', { willReadFrequently: true });
-
-    function hexToRgb(hex) { const h = hex.replace('#', ''); return { r: parseInt(h.slice(0, 2), 16), g: parseInt(h.slice(2, 4), 16), b: parseInt(h.slice(4, 6), 16) }; }
-    function colorDistance(a, b) { return Math.sqrt((a.r-b.r)**2 + (a.g-b.g)**2 + (a.b-b.b)**2); }
-    function nearestScaleColor(r, g, b) { let best = null, bestDistance = Infinity; PRECIP_SCALE.forEach((item, index) => { const dist = colorDistance({r,g,b}, hexToRgb(item.color)); if (dist < bestDistance) { bestDistance = dist; best = { ...item, index, distance: dist }; } }); return (!best || bestDistance > 105) ? null : best; }
-    function binTextForScaleItem(item) { if (!item) return 'No data'; const next = PRECIP_SCALE[item.index + 1]; return next ? `${item.label}–${next.label} in` : `${item.label}+ in`; }
-    function getRadarLayerName() { return `${RADARS[state.source].station}_${PRODUCTS[state.product].radarLayerCode}`; }
-    function getRadarWmsUrl() { return `https://opengeo.ncep.noaa.gov/geoserver/${RADARS[state.source].station}/ows`; }
-    function setStatus(html) { const el = document.getElementById('status'); if (el) el.innerHTML = html; }
-    function formatLatLng(latlng) { return `${latlng.lat.toFixed(4)}°, ${latlng.lng.toFixed(4)}°`; }
-    function updateReadout(latlng, htmlValue, color, meta) { const valueEl = document.getElementById('readout-value'); valueEl.innerHTML = htmlValue; valueEl.style.color = color || '#555'; document.getElementById('readout-coords').textContent = formatLatLng(latlng); document.getElementById('readout-meta').textContent = meta; }
-
-    function clearWeatherLayer() { if (state.weatherLayer && map.hasLayer(state.weatherLayer)) map.removeLayer(state.weatherLayer); state.weatherLayer = null; }
-    function loadWeatherLayer() {
-      clearWeatherLayer();
-      if (state.source === 'MRMS') {
-        state.weatherLayer = new ArcGisDynamicLayer({ opacity: state.opacity, tileSize: 256, pane: 'weatherPane', attribution: 'NOAA / NWS MRMS QPE' }).addTo(map);
-        setStatus(`<span class='good'>Layer:</span> MRMS QPE`);
-      } else {
-        const layerName = getRadarLayerName();
-        state.weatherLayer = L.tileLayer.wms(getRadarWmsUrl(), { layers: layerName, format: 'image/png', transparent: true, version: '1.1.1', opacity: state.opacity, pane: 'weatherPane', crossOrigin: 'anonymous', attribution: 'NOAA / NWS NEXRAD Level III' }).addTo(map);
-        setStatus(`<span class='good'>Layer:</span> ${layerName}`);
-      }
-      bringReferenceFront();
-      buildLegend();
-      if (!state.pinned) updateReadout(map.getCenter(), 'Move cursor', '#555', 'Cursor samples displayed radar pixel color. Click map to pin.');
-    }
-
-    const ArcGisDynamicLayer = L.GridLayer.extend({
-      createTile: function(coords, done) {
-        const tile = document.createElement('img');
-        tile.alt = '';
-        tile.crossOrigin = 'anonymous';
-        tile.setAttribute('role', 'presentation');
-        tile.style.width = '256px';
-        tile.style.height = '256px';
-        tile.onload = () => done(null, tile);
-        tile.onerror = () => done(new Error('MRMS tile failed'), tile);
-        const nw = coords.multiplyBy(256);
-        const se = nw.add([256, 256]);
-        const nwPoint = map.unproject(nw, coords.z);
-        const sePoint = map.unproject(se, coords.z);
-        const sw3857 = map.options.crs.project(L.latLng(sePoint.lat, nwPoint.lng));
-        const ne3857 = map.options.crs.project(L.latLng(nwPoint.lat, sePoint.lng));
-        const bbox = [sw3857.x, sw3857.y, ne3857.x, ne3857.y].join(',');
-        tile.src = `${MRMS_ARCGIS_URL}/export?f=image&bbox=${bbox}&bboxSR=3857&imageSR=3857&size=256,256&format=png32&transparent=true&layers=show:0&_=${Date.now()}`;
-        return tile;
-      }
-    });
-
-    function sampleDisplayedWeatherColor(latlng) {
-      if (!state.weatherLayer || !state.weatherLayer._tiles) return { ok: false, reason: 'weather tiles not ready' };
-      const zoom = map.getZoom();
-      const tileSize = state.weatherLayer.getTileSize ? state.weatherLayer.getTileSize() : L.point(256, 256);
-      const point = map.project(latlng, zoom);
-      const tileCoords = point.unscaleBy(tileSize).floor();
-      tileCoords.z = zoom;
-      const key = state.weatherLayer._tileCoordsToKey ? state.weatherLayer._tileCoordsToKey(tileCoords) : `${tileCoords.x}:${tileCoords.y}:${tileCoords.z}`;
-      const tileRecord = state.weatherLayer._tiles[key];
-      const tile = tileRecord && tileRecord.el;
-      if (!tile || !tile.complete || !tile.naturalWidth || !tile.naturalHeight) return { ok: false, reason: 'tile not loaded yet' };
-      const rawX = point.x - tileCoords.x * tileSize.x;
-      const rawY = point.y - tileCoords.y * tileSize.y;
-      const x = Math.floor(rawX * (tile.naturalWidth / tileSize.x));
-      const y = Math.floor(rawY * (tile.naturalHeight / tileSize.y));
-      try {
-        sampleCanvas.width = tile.naturalWidth;
-        sampleCanvas.height = tile.naturalHeight;
-        sampleCtx.clearRect(0, 0, sampleCanvas.width, sampleCanvas.height);
-        sampleCtx.drawImage(tile, 0, 0);
-        const [r, g, b, a] = sampleCtx.getImageData(x, y, 1, 1).data;
-        if (a < 10) return { ok: true, empty: true, reason: 'transparent/no echo' };
-        const match = nearestScaleColor(r, g, b);
-        if (!match) return { ok: true, empty: true, reason: `unmatched pixel rgb(${r},${g},${b})` };
-        return { ok: true, empty: false, match };
-      } catch (err) { return { ok: false, reason: `canvas sample blocked: ${err.message}` }; }
-    }
-
-    function queryAt(latlng) {
-      const seq = ++state.querySeq;
-      const sampled = sampleDisplayedWeatherColor(latlng);
-      if (seq !== state.querySeq) return;
-      if (sampled.ok && !sampled.empty) { updateReadout(latlng, binTextForScaleItem(sampled.match), sampled.match.color, `${state.source} ${PRODUCTS[state.product].label} · sampled display color`); return; }
-      if (sampled.ok && sampled.empty) { updateReadout(latlng, 'No data', '#555', `${state.source} ${PRODUCTS[state.product].label} · ${sampled.reason}`); return; }
-      if (state.source === 'MRMS') queryMrmsIdentify(latlng, seq, sampled.reason); else queryWmsFeatureInfo(latlng, seq, sampled.reason);
-    }
-
-    function queryWmsFeatureInfo(latlng, seq, sampleReason) {
-      const point = map.latLngToContainerPoint(latlng);
-      const size = map.getSize();
-      const b = map.getBounds();
-      const bbox = [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()].join(',');
-      const layerName = getRadarLayerName();
-      const url = `${getRadarWmsUrl()}?service=WMS&version=1.1.1&request=GetFeatureInfo&layers=${encodeURIComponent(layerName)}&query_layers=${encodeURIComponent(layerName)}&styles=&bbox=${encodeURIComponent(bbox)}&width=${size.x}&height=${size.y}&x=${Math.round(point.x)}&y=${Math.round(point.y)}&srs=EPSG:4326&info_format=application/json`;
-      fetch(url).then(res => { if (!res.ok) throw new Error(`HTTP ${res.status}`); return res.json(); }).then(data => {
-        if (seq !== state.querySeq) return;
-        const parsed = extractNumericValue(data?.features?.[0]?.properties || null);
-        if (parsed === null) throw new Error('no numeric value returned');
-        const approx = nearestValueToScale(parsed);
-        updateReadout(latlng, `${approx.text}`, approx.color, `${state.source} GetFeatureInfo · sampled failed: ${sampleReason}`);
-      }).catch(err => { if (seq !== state.querySeq) return; updateReadout(latlng, 'Unavailable', '#b00020', `Readout failed: ${sampleReason}; GetFeatureInfo ${err.message}`); });
-    }
-
-    function queryMrmsIdentify(latlng, seq, sampleReason) {
-      const size = map.getSize();
-      const b = map.getBounds();
-      const mapExtent = [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()].join(',');
-      const geometry = `${latlng.lng},${latlng.lat}`;
-      const url = `${MRMS_ARCGIS_URL}/identify?f=json&geometry=${encodeURIComponent(geometry)}&geometryType=esriGeometryPoint&sr=4326&layers=all:0&tolerance=3&mapExtent=${encodeURIComponent(mapExtent)}&imageDisplay=${size.x},${size.y},96&returnGeometry=false`;
-      fetch(url).then(res => { if (!res.ok) throw new Error(`HTTP ${res.status}`); return res.json(); }).then(data => {
-        if (seq !== state.querySeq) return;
-        const parsed = extractNumericValue(data?.results?.[0]?.attributes || null);
-        if (parsed === null) throw new Error('no numeric value returned');
-        const approx = nearestValueToScale(parsed);
-        updateReadout(latlng, `${approx.text}`, approx.color, `MRMS identify · sampled failed: ${sampleReason}`);
-      }).catch(err => { if (seq !== state.querySeq) return; updateReadout(latlng, 'Unavailable', '#b00020', `MRMS readout failed: ${sampleReason}; identify ${err.message}`); });
-    }
-
-    function extractNumericValue(props) {
-      if (!props) return null;
-      const keys = ['GRAY_INDEX', 'gray_index', 'value', 'VALUE', 'pixel_value', 'Pixel Value', 'PixelValue', 'band_1', 'Band1', 'BAND_1', 'RASTERVALU', 'grid_value'];
-      for (const key of keys) { if (props[key] !== undefined && props[key] !== null) { const num = Number(props[key]); if (!Number.isNaN(num)) return num; } }
-      for (const raw of Object.values(props)) { const num = Number(raw); if (!Number.isNaN(num)) return num; }
-      return null;
-    }
-
-    function nearestValueToScale(value) { let item = PRECIP_SCALE[0]; for (const scaleItem of PRECIP_SCALE) if (value >= scaleItem.value) item = scaleItem; return { text: binTextForScaleItem({ ...item, index: PRECIP_SCALE.indexOf(item) }), color: item.color }; }
-    function buildLegend() { document.getElementById('legend-title').textContent = state.source === 'MRMS' ? `MRMS QPE / ${PRODUCTS[state.product].label}` : `${state.source} ${PRODUCTS[state.product].label}`; document.getElementById('legend-labels').innerHTML = PRECIP_SCALE.map(item => `<span>${item.label}</span>`).join(''); }
-
-    function featureTouchesLocalBbox(feature) {
-      let found = false;
-      function scan(coords) {
-        if (found) return;
-        if (typeof coords[0] === 'number' && typeof coords[1] === 'number') { const lon = coords[0], lat = coords[1]; if (lon >= LOCAL_BBOX.west && lon <= LOCAL_BBOX.east && lat >= LOCAL_BBOX.south && lat <= LOCAL_BBOX.north) found = true; return; }
-        coords.forEach(scan);
-      }
-      if (feature.geometry && feature.geometry.coordinates) scan(feature.geometry.coordinates);
-      return found;
-    }
-
-    function loadCountyContext() {
-      fetch(COUNTY_GEOJSON_URL).then(res => res.json()).then(geojson => {
-        const local = { type: 'FeatureCollection', features: geojson.features.filter(featureTouchesLocalBbox) };
-        state.countyContextLayer = L.geoJSON(local, { interactive: false, pane: 'referencePane', style: { color: '#b7b7b7', weight: 0.55, opacity: 0.65, fillOpacity: 0 } }).addTo(map);
-        bringReferenceFront();
-      }).catch(() => console.warn('County context failed to load'));
-    }
-
-    function loadOfficialLixCwaBoundary() {
-      const where = encodeURIComponent("wfo='LIX'");
-      const url = `${NWS_REF_MAPSERVER}/1/query?where=${where}&outFields=wfo,cwa,city,state,fullstaid&returnGeometry=true&outSR=4326&f=geojson`;
-      fetch(url).then(res => { if (!res.ok) throw new Error(`HTTP ${res.status}`); return res.json(); }).then(geojson => {
-        if (!geojson.features || !geojson.features.length) throw new Error('No LIX CWA features returned');
-        state.wfoBoundaryLayer = L.geoJSON(geojson, { interactive: false, pane: 'referencePane', style: { color: '#000000', weight: 3.0, opacity: 0.95, fillOpacity: 0 } }).addTo(map);
-        bringReferenceFront();
-        setStatus(`<span class='good'>Layer:</span> official NWS LIX CWA`);
-      }).catch(err => setStatus(`<span class='bad'>Official LIX CWA failed:</span> ${err.message}`));
-    }
-
-    function loadStateLines() {
-      fetch(STATES_GEOJSON_URL).then(res => res.json()).then(geojson => {
-        const wanted = new Set(['Louisiana', 'Mississippi', 'Alabama']);
-        const filtered = { type: 'FeatureCollection', features: geojson.features.filter(f => wanted.has(f.properties?.name)) };
-        state.stateLayer = L.geoJSON(filtered, { interactive: false, pane: 'referencePane', style: { color: '#555555', weight: 1.4, opacity: 0.9, fillOpacity: 0 } }).addTo(map);
-        bringReferenceFront();
-      }).catch(() => console.warn('State outlines failed to load'));
-    }
-
-    function loadLakes() {
-      fetch(LAKES_GEOJSON_URL).then(res => res.json()).then(geojson => {
-        const filtered = { type: 'FeatureCollection', features: geojson.features.filter(featureTouchesLocalBbox) };
-        state.lakeLayer = L.geoJSON(filtered, { interactive: false, pane: 'referencePane', style: { color: '#000000', weight: 1.2, opacity: 0.85, fillOpacity: 0 } }).addTo(map);
-        bringReferenceFront();
-      }).catch(() => console.warn('Lake outlines failed to load'));
-    }
-
-    function addCityLabels() {
-      if (state.cityLayer && map.hasLayer(state.cityLayer)) map.removeLayer(state.cityLayer);
-      state.cityLayer = L.layerGroup(LIX_CITIES.map(city => L.marker(city.coords, {
-        pane: 'cityPane', interactive: false,
-        icon: L.divIcon({ className: 'city-label', html: `<div class='city-text'><span class='city-dot'></span>${city.name}</div>`, iconSize: [180, 26], iconAnchor: [4, 13] })
-      }))).addTo(map);
-      bringReferenceFront();
-    }
-
-    function bringReferenceFront() {
-      if (state.countyContextLayer) state.countyContextLayer.bringToFront();
-      if (state.stateLayer) state.stateLayer.bringToFront();
-      if (state.lakeLayer) state.lakeLayer.bringToFront();
-      if (state.wfoBoundaryLayer) state.wfoBoundaryLayer.bringToFront();
-      if (state.cityLayer) state.cityLayer.eachLayer(layer => layer.setZIndexOffset && layer.setZIndexOffset(1000));
-    }
-
-    const Controls = L.Control.extend({ options: { position: 'topleft' }, onAdd: function() { const div = L.DomUtil.create('div', 'panel'); div.innerHTML = `<h1>Precip Accumulation</h1><label><input type='radio' name='source' value='KHDC' checked> KHDC radar</label><label><input type='radio' name='source' value='KMOB'> KMOB radar</label><label><input type='radio' name='source' value='MRMS'> MRMS QPE</label><div class='section'><label>Product<select id='product-select'><option value='DTA' selected>Storm Total Precip</option><option value='DAA'>1 Hour Precip</option></select></label></div><div class='section'><label>Opacity <span id='opacity-label'>72%</span><input id='opacity' type='range' min='0' max='1' step='0.05' value='0.72'></label><button id='refresh' type='button'>Refresh</button></div><div id='status' class='status'></div>`; L.DomEvent.disableClickPropagation(div); L.DomEvent.disableScrollPropagation(div); return div; } });
-    const Readout = L.Control.extend({ options: { position: 'bottomleft' }, onAdd: function() { const div = L.DomUtil.create('div', 'readout'); div.innerHTML = `<strong>Cursor Readout</strong><div id='readout-value' class='value'>Move cursor</div><div id='readout-coords' class='coords'>--</div><div id='readout-meta' class='meta'>Samples displayed radar pixel color. Click map to pin; click again to unpin.</div>`; L.DomEvent.disableClickPropagation(div); L.DomEvent.disableScrollPropagation(div); return div; } });
-    const Legend = L.Control.extend({ options: { position: 'bottomright' }, onAdd: function() { const div = L.DomUtil.create('div', 'legend'); div.innerHTML = `<div id='legend-title' class='legend-title'>Legend</div><div class='legend-bar'></div><div id='legend-labels' class='legend-labels'></div><div class='legend-note'>Rainfall accumulation in inches. Readout returns the displayed color bin.</div>`; L.DomEvent.disableClickPropagation(div); L.DomEvent.disableScrollPropagation(div); return div; } });
-
-    map.addControl(new Controls());
-    map.addControl(new Readout());
-    map.addControl(new Legend());
-
-    document.querySelectorAll("input[name='source']").forEach(input => input.addEventListener('change', e => { state.source = e.target.value; state.pinned = false; if (state.pinMarker) map.removeLayer(state.pinMarker); state.pinMarker = null; loadWeatherLayer(); }));
-    document.getElementById('product-select').addEventListener('change', e => { state.product = e.target.value; state.pinned = false; if (state.pinMarker) map.removeLayer(state.pinMarker); state.pinMarker = null; loadWeatherLayer(); });
-    document.getElementById('opacity').addEventListener('input', e => { state.opacity = Number(e.target.value); document.getElementById('opacity-label').textContent = `${Math.round(state.opacity * 100)}%`; if (state.weatherLayer && state.weatherLayer.setOpacity) state.weatherLayer.setOpacity(state.opacity); });
-    document.getElementById('refresh').addEventListener('click', loadWeatherLayer);
-
-    map.on('mousemove', e => { if (state.pinned) return; const now = Date.now(); if (now - state.lastMoveQuery < 100) return; state.lastMoveQuery = now; queryAt(e.latlng); });
-    map.on('click', e => {
-      if (state.pinned) { state.pinned = false; if (state.pinMarker) map.removeLayer(state.pinMarker); state.pinMarker = null; updateReadout(e.latlng, 'Unpinned', '#555', 'Move cursor to sample.'); return; }
-      state.pinned = true;
-      if (state.pinMarker) map.removeLayer(state.pinMarker);
-      state.pinMarker = L.circleMarker(e.latlng, { radius: 6, color: '#000', weight: 2, fillColor: '#fff', fillOpacity: 1, pane: 'cityPane' }).addTo(map);
-      queryAt(e.latlng);
-      document.getElementById('readout-meta').textContent = 'Pinned point. Click map again to unpin.';
-    });
-
-    loadWeatherLayer();
-    loadCountyContext();
-    loadOfficialLixCwaBoundary();
-    loadStateLines();
-    loadLakes();
-    addCityLabels();
-  </script>
+<div id="map"></div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const map=L.map('map',{center:[30.35,-89.80],zoom:8,preferCanvas:true});
+['weatherPane','referencePane','cityPane'].forEach((p,i)=>{map.createPane(p);map.getPane(p).style.zIndex=[450,700,760][i];map.getPane(p).style.pointerEvents='none'});
+const LOCAL={west:-92.5,east:-88,south:28.5,north:32};
+const URLS={county:'https://raw.githubusercontent.com/plotly/datasets/master/geojson-counties-fips.json',lakes:'https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_10m_lakes.geojson',states:'https://raw.githubusercontent.com/PublicaMundi/MappingAPI/master/data/geojson/us-states.json',nws:'https://mapservices.weather.noaa.gov/static/rest/services/nws_reference_maps/nws_reference_map/MapServer',mrms:'https://mapservices.weather.noaa.gov/raster/rest/services/obs/mrms_qpe/MapServer'};
+L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'Base &copy; Esri'}).addTo(map);
+const RADARS={KHDC:{station:'khdc'},KMOB:{station:'kmob'}};
+const PRODUCTS={DTA:{label:'Storm Total Precip',code:'bdsa'},DAA:{label:'1 Hour Precip',code:'boha'}};
+const CITIES=[['Baton Rouge',30.4515,-91.1871],['New Orleans',29.9511,-90.0715],['Gulfport',30.3674,-89.0928],['McComb',31.2438,-90.4532],['Woodville',31.1046,-91.2993],['Hammond',30.5044,-90.4612],['Bogalusa',30.7910,-89.8487],['Houma',29.5958,-90.7195],['Covington',30.4755,-90.1009],['Mandeville',30.3583,-90.0656],['Slidell',30.2752,-89.7812],['Picayune',30.5255,-89.6795],['Poplarville',30.8402,-89.5342],['Franklinton',30.8471,-90.1531],['Amite',30.7266,-90.5087],['Greensburg',30.8307,-90.6718],['Gonzales',30.2385,-90.9201],['Laplace',30.0666,-90.4801],['Thibodaux',29.7958,-90.8229],['Galliano',29.4422,-90.2992],['Bay St. Louis',30.3088,-89.3300],['Waveland',30.2869,-89.3762],['Diamondhead',30.3946,-89.3639],['Biloxi',30.3960,-88.8853],['Ocean Springs',30.4113,-88.8278],['Pascagoula',30.3658,-88.5561]];
+let state={source:'KHDC',product:'DTA',opacity:.72,wx:null,county:null,states:null,lakes:null,cwa:null,cities:null,pinned:false,pin:null,last:0,seq:0};
+function station(){return RADARS[state.source].station}function layer(){return `${station()}_${PRODUCTS[state.product].code}`}function wms(){return `https://opengeo.ncep.noaa.gov/geoserver/${station()}/ows`}function status(x){document.getElementById('status').innerHTML=x}function read(latlng,val,meta,color='#555'){document.getElementById('readout-value').innerHTML=val;document.getElementById('readout-value').style.color=color;document.getElementById('readout-coords').textContent=`${latlng.lat.toFixed(4)}°, ${latlng.lng.toFixed(4)}°`;document.getElementById('readout-meta').textContent=meta}
+function loadWx(){if(state.wx)map.removeLayer(state.wx);if(state.source==='MRMS'){state.wx=new ArcLayer({opacity:state.opacity,tileSize:256,pane:'weatherPane'}).addTo(map);status('<span class="good">Layer:</span> MRMS QPE')}else{state.wx=L.tileLayer.wms(wms(),{layers:layer(),format:'image/png',transparent:true,version:'1.1.1',opacity:state.opacity,pane:'weatherPane',crossOrigin:'anonymous'}).addTo(map);status(`<span class="good">Layer:</span> ${layer()}`)}front();legend();if(!state.pinned)read(map.getCenter(),'Move cursor','Cursor samples the active layer. Click map to pin.')}
+const ArcLayer=L.GridLayer.extend({createTile:function(c,done){const t=document.createElement('img');t.crossOrigin='anonymous';t.onload=()=>done(null,t);t.onerror=()=>done(Error('MRMS tile failed'),t);t.style.width=t.style.height='256px';const nw=c.multiplyBy(256),se=nw.add([256,256]),nwp=map.unproject(nw,c.z),sep=map.unproject(se,c.z),sw=map.options.crs.project(L.latLng(sep.lat,nwp.lng)),ne=map.options.crs.project(L.latLng(nwp.lat,sep.lng));t.src=`${URLS.mrms}/export?f=image&bbox=${[sw.x,sw.y,ne.x,ne.y].join(',')}&bboxSR=3857&imageSR=3857&size=256,256&format=png32&transparent=true&layers=show:0&_=${Date.now()}`;return t}});
+function legend(){const title=document.getElementById('legend-title'),body=document.getElementById('legend-body');if(state.source==='MRMS'){title.textContent=`MRMS QPE / ${PRODUCTS[state.product].label}`;body.innerHTML='<div class="legend-note">MRMS legend is service-dependent. Radar legends are pulled directly from the exact NOAA GeoServer WMS layer.</div>';return}title.textContent=`${state.source} ${PRODUCTS[state.product].label}`;const p=new URLSearchParams({service:'WMS',version:'1.1.1',request:'GetLegendGraphic',format:'image/png',transparent:'true',layer:layer(),width:'28',height:'18'});body.innerHTML=`<img alt="Official WMS legend for ${layer()}" src="${wms()}?${p.toString()}&_=${Date.now()}"><div class="legend-note">Official NOAA GeoServer WMS legend for <b>${layer()}</b>. No hand-built scale.</div>`}
+function identify(ll,seq){if(state.source==='MRMS'){const s=map.getSize(),b=map.getBounds(),ext=[b.getWest(),b.getSouth(),b.getEast(),b.getNorth()].join(','),geom=`${ll.lng},${ll.lat}`,u=`${URLS.mrms}/identify?f=json&geometry=${encodeURIComponent(geom)}&geometryType=esriGeometryPoint&sr=4326&layers=all:0&tolerance=3&mapExtent=${encodeURIComponent(ext)}&imageDisplay=${s.x},${s.y},96&returnGeometry=false`;fetch(u).then(r=>r.json()).then(j=>{if(seq!==state.seq)return;let v=extract(j?.results?.[0]?.attributes);read(ll,v==null?'No data':`${Number(v).toFixed(2)} in`,'MRMS identify')}).catch(e=>read(ll,'Unavailable',`MRMS identify failed: ${e.message}`));return}const p=map.latLngToContainerPoint(ll),s=map.getSize(),b=map.getBounds(),bbox=[b.getWest(),b.getSouth(),b.getEast(),b.getNorth()].join(','),u=`${wms()}?service=WMS&version=1.1.1&request=GetFeatureInfo&layers=${encodeURIComponent(layer())}&query_layers=${encodeURIComponent(layer())}&styles=&bbox=${encodeURIComponent(bbox)}&width=${s.x}&height=${s.y}&x=${Math.round(p.x)}&y=${Math.round(p.y)}&srs=EPSG:4326&info_format=application/json`;fetch(u).then(r=>r.json()).then(j=>{if(seq!==state.seq)return;let v=extract(j?.features?.[0]?.properties);read(ll,v==null?'No data':`${Number(v).toFixed(2)} in`,`${state.source} GetFeatureInfo`)}).catch(e=>read(ll,'Unavailable',`GetFeatureInfo failed: ${e.message}`))}
+function extract(o){if(!o)return null;for(const k of ['GRAY_INDEX','gray_index','value','VALUE','pixel_value','PixelValue','band_1','Band1','RASTERVALU','grid_value']){if(o[k]!=null&&!Number.isNaN(Number(o[k])))return Number(o[k])}for(const v of Object.values(o)){if(!Number.isNaN(Number(v)))return Number(v)}return null}
+function touches(f){let ok=false;function scan(c){if(ok)return;if(typeof c[0]==='number'){let lon=c[0],lat=c[1];if(lon>=LOCAL.west&&lon<=LOCAL.east&&lat>=LOCAL.south&&lat<=LOCAL.north)ok=true;return}c.forEach(scan)}if(f.geometry?.coordinates)scan(f.geometry.coordinates);return ok}
+function county(){fetch(URLS.county).then(r=>r.json()).then(g=>{state.county=L.geoJSON({type:'FeatureCollection',features:g.features.filter(touches)},{interactive:false,pane:'referencePane',style:{color:'#b7b7b7',weight:.55,opacity:.65,fillOpacity:0}}).addTo(map);front()})}
+function cwa(){const where=encodeURIComponent("wfo='LIX'");fetch(`${URLS.nws}/1/query?where=${where}&outFields=wfo,cwa&returnGeometry=true&outSR=4326&f=geojson`).then(r=>r.json()).then(g=>{state.cwa=L.geoJSON(g,{interactive:false,pane:'referencePane',style:{color:'#000',weight:3,opacity:.95,fillOpacity:0}}).addTo(map);front()}).catch(e=>status(`<span class="bad">Official LIX CWA failed:</span> ${e.message}`))}
+function states(){fetch(URLS.states).then(r=>r.json()).then(g=>{state.states=L.geoJSON({type:'FeatureCollection',features:g.features.filter(f=>['Louisiana','Mississippi','Alabama'].includes(f.properties?.name))},{interactive:false,pane:'referencePane',style:{color:'#555',weight:1.4,opacity:.9,fillOpacity:0}}).addTo(map);front()})}
+function lakes(){fetch(URLS.lakes).then(r=>r.json()).then(g=>{state.lakes=L.geoJSON({type:'FeatureCollection',features:g.features.filter(touches)},{interactive:false,pane:'referencePane',style:{color:'#000',weight:1.2,opacity:.85,fillOpacity:0}}).addTo(map);front()})}
+function cities(){state.cities=L.layerGroup(CITIES.map(c=>L.marker([c[1],c[2]],{pane:'cityPane',interactive:false,icon:L.divIcon({className:'city-label',html:`<div class="city-text"><span class="city-dot"></span>${c[0]}</div>`,iconSize:[180,26],iconAnchor:[4,13]})}))).addTo(map);front()}
+function front(){for(const k of ['county','states','lakes','cwa'])if(state[k])state[k].bringToFront();if(state.cities)state.cities.eachLayer(l=>l.setZIndexOffset(1000))}
+const Controls=L.Control.extend({options:{position:'topleft'},onAdd:function(){const d=L.DomUtil.create('div','panel');d.innerHTML=`<h1>Precip Accumulation</h1><label><input type="radio" name="source" value="KHDC" checked> KHDC radar</label><label><input type="radio" name="source" value="KMOB"> KMOB radar</label><label><input type="radio" name="source" value="MRMS"> MRMS QPE</label><div class="section"><label>Product<select id="product-select"><option value="DTA" selected>Storm Total Precip</option><option value="DAA">1 Hour Precip</option></select></label></div><div class="section"><label>Opacity <span id="opacity-label">72%</span><input id="opacity" type="range" min="0" max="1" step=".05" value=".72"></label><button id="refresh" type="button">Refresh</button></div><div id="status" class="status"></div>`;L.DomEvent.disableClickPropagation(d);L.DomEvent.disableScrollPropagation(d);return d}});
+const Readout=L.Control.extend({options:{position:'bottomleft'},onAdd:function(){const d=L.DomUtil.create('div','readout');d.innerHTML='<strong>Cursor Readout</strong><div id="readout-value" class="value">Move cursor</div><div id="readout-coords" class="coords">--</div><div id="readout-meta" class="meta">Click map to pin; click again to unpin.</div>';L.DomEvent.disableClickPropagation(d);return d}});
+const Legend=L.Control.extend({options:{position:'bottomright'},onAdd:function(){const d=L.DomUtil.create('div','legend');d.innerHTML='<div id="legend-title" class="legend-title">Legend</div><div id="legend-body">Loading legend...</div>';L.DomEvent.disableClickPropagation(d);return d}});
+map.addControl(new Controls());map.addControl(new Readout());map.addControl(new Legend());
+document.querySelectorAll('input[name=source]').forEach(i=>i.addEventListener('change',e=>{state.source=e.target.value;state.pinned=false;if(state.pin)map.removeLayer(state.pin);state.pin=null;loadWx()}));
+document.getElementById('product-select').addEventListener('change',e=>{state.product=e.target.value;state.pinned=false;if(state.pin)map.removeLayer(state.pin);state.pin=null;loadWx()});
+document.getElementById('opacity').addEventListener('input',e=>{state.opacity=Number(e.target.value);document.getElementById('opacity-label').textContent=`${Math.round(state.opacity*100)}%`;if(state.wx?.setOpacity)state.wx.setOpacity(state.opacity)});
+document.getElementById('refresh').addEventListener('click',loadWx);
+map.on('mousemove',e=>{if(state.pinned)return;let now=Date.now();if(now-state.last<250)return;state.last=now;identify(e.latlng,++state.seq)});
+map.on('click',e=>{if(state.pinned){state.pinned=false;if(state.pin)map.removeLayer(state.pin);state.pin=null;read(e.latlng,'Unpinned','Move cursor to sample.');return}state.pinned=true;if(state.pin)map.removeLayer(state.pin);state.pin=L.circleMarker(e.latlng,{radius:6,color:'#000',weight:2,fillColor:'#fff',fillOpacity:1,pane:'cityPane'}).addTo(map);identify(e.latlng,++state.seq)});
+loadWx();county();cwa();states();lakes();cities();
+</script>
 </body>
 </html>

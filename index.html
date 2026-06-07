@@ -16,115 +16,119 @@
       font-family: Arial, Helvetica, sans-serif;
     }
 
-    .title-box {
-      position: absolute;
-      top: 12px;
-      left: 50px;
-      z-index: 1000;
-      background: rgba(255, 255, 255, 0.94);
-      padding: 10px 14px;
+    .leaflet-container { background: #eef3f7; }
+
+    .panel {
+      background: rgba(255, 255, 255, 0.96);
+      border: 1px solid rgba(0, 0, 0, 0.2);
       border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.25);
-      max-width: 430px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.25);
+      padding: 11px 12px;
+      color: #111;
+      font-size: 13px;
+      width: 285px;
     }
 
-    .title-box h1 {
-      margin: 0 0 4px 0;
-      font-size: 18px;
-    }
-
-    .title-box div {
-      font-size: 12px;
-      color: #333;
-      line-height: 1.35;
-    }
-
-    .control-box {
-      background: rgba(255, 255, 255, 0.95);
-      padding: 12px;
-      border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.25);
-      width: 305px;
-    }
-
-    .control-box h2 {
-      font-size: 15px;
+    .panel h1 {
       margin: 0 0 8px 0;
+      font-size: 16px;
+      line-height: 1.15;
     }
 
-    .control-box label {
+    .panel label {
       display: block;
-      margin: 7px 0;
-      font-size: 14px;
+      margin: 6px 0;
       cursor: pointer;
     }
 
-    .control-box select,
-    .control-box input[type="range"] {
+    .panel .section {
+      margin-top: 10px;
+      padding-top: 9px;
+      border-top: 1px solid #ddd;
+    }
+
+    .panel select,
+    .panel input[type="range"] {
       width: 100%;
-      margin-top: 4px;
+      box-sizing: border-box;
     }
 
-    .control-row { margin-top: 10px; }
-
-    .control-note {
-      margin-top: 9px;
-      font-size: 11px;
-      color: #444;
-      line-height: 1.35;
-      word-break: break-word;
-    }
-
-    .status-good { color: #1f6b2a; font-weight: bold; }
-    .status-warn { color: #a25a00; font-weight: bold; }
-    .status-bad { color: #b00020; font-weight: bold; }
-
-    button {
-      cursor: pointer;
-      border: 1px solid #888;
-      background: #f7f7f7;
+    .panel button {
+      margin-top: 7px;
+      padding: 5px 9px;
+      border: 1px solid #777;
       border-radius: 4px;
-      padding: 5px 8px;
-      font-size: 12px;
+      background: #f6f6f6;
+      cursor: pointer;
     }
 
-    button:hover { background: #ececec; }
+    .status {
+      margin-top: 8px;
+      font-size: 11px;
+      line-height: 1.3;
+      color: #333;
+    }
+
+    .good { color: #08751f; font-weight: bold; }
+    .warn { color: #9a5700; font-weight: bold; }
+    .bad { color: #b00020; font-weight: bold; }
+
+    .readout {
+      background: rgba(255, 255, 255, 0.96);
+      border: 1px solid rgba(0, 0, 0, 0.2);
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.25);
+      padding: 10px 12px;
+      min-width: 235px;
+      color: #111;
+      font-size: 13px;
+      line-height: 1.3;
+    }
+
+    .readout .value {
+      font-size: 25px;
+      font-weight: 800;
+      margin: 3px 0 4px 0;
+    }
+
+    .readout .coords,
+    .readout .meta {
+      font-size: 11px;
+      color: #333;
+    }
 
     .legend {
-      background: rgba(255, 255, 255, 0.95);
-      padding: 10px;
+      background: rgba(255, 255, 255, 0.96);
+      border: 1px solid rgba(0, 0, 0, 0.2);
       border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+      box-shadow: 0 2px 10px rgba(0,0,0,0.25);
+      padding: 10px 12px;
+      color: #111;
+      width: 205px;
+      max-height: 42vh;
+      overflow-y: auto;
       font-size: 12px;
-      line-height: 1.25;
     }
 
-    .legend-title { font-weight: bold; margin-bottom: 6px; }
-
-    .legend-gradient {
-      width: 220px;
-      height: 12px;
-      background: linear-gradient(to right,
-        #ffffff,
-        #d6f5ff,
-        #78c6ff,
-        #1e72ff,
-        #25bd35,
-        #ffff00,
-        #ff9d00,
-        #ff0000,
-        #b000b0,
-        #ffffff
-      );
-      border: 1px solid #555;
-      margin-bottom: 4px;
+    .legend-title {
+      font-weight: 800;
+      font-size: 13px;
+      margin-bottom: 7px;
     }
 
-    .legend-scale {
+    .legend-row {
       display: flex;
+      align-items: center;
       justify-content: space-between;
-      width: 220px;
-      font-size: 11px;
+      gap: 8px;
+      margin: 3px 0;
+    }
+
+    .swatch {
+      width: 52px;
+      height: 12px;
+      border: 1px solid #555;
+      flex: none;
     }
 
     .leaflet-control-attribution { font-size: 10px; }
@@ -132,13 +136,6 @@
 </head>
 <body>
   <div id="map"></div>
-
-  <div class="title-box">
-    <h1>Radar / MRMS Precip Accumulation</h1>
-    <div>
-      KHDC/KMOB now try dual-pol precip products first: DTA for storm-total and DAA for 1-hour. Legacy NTP/N1P are only fallbacks.
-    </div>
-  </div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
@@ -149,237 +146,406 @@
       preferCanvas: true
     });
 
-    const baseLayers = {
-      "OpenStreetMap": L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution: '&copy; OpenStreetMap contributors'
-      }),
-      "Esri World Imagery": L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-        maxZoom: 19,
-        attribution: 'Tiles &copy; Esri'
-      }),
-      "Carto Light": L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-        maxZoom: 19,
-        attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
-      })
+    const BASEMAP = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    const COUNTY_GEOJSON_URL = 'https://raw.githubusercontent.com/plotly/datasets/master/geojson-counties-fips.json';
+    const MRMS_ARCGIS_URL = 'https://mapservices.weather.noaa.gov/raster/rest/services/obs/mrms_qpe/MapServer';
+
+    const RADARS = {
+      KHDC: { label: 'KHDC', station: 'khdc', lat: 30.5195, lon: -90.4179 },
+      KMOB: { label: 'KMOB', station: 'kmob', lat: 30.6794, lon: -88.2397 }
     };
 
-    baseLayers["OpenStreetMap"].addTo(map);
-
-    const radarSites = {
-      KHDC: { label: "KHDC - Hammond, LA", lat: 30.5195, lon: -90.4179 },
-      KMOB: { label: "KMOB - Mobile, AL", lat: 30.6794, lon: -88.2397 }
-    };
-
-    const radarProducts = {
-      DTA: { label: "Storm Total Precip", legacy: "NTP" },
-      DAA: { label: "1 Hour Precip", legacy: "N1P" }
-    };
-
-    const mrmsProducts = {
-      qpe: {
-        label: "MRMS QPE",
-        url: "https://mapservices.weather.noaa.gov/raster/services/obs/mrms_qpe/MapServer/WMSServer",
-        layers: "0"
+    const PRODUCTS = {
+      DTA: {
+        label: 'Storm Total Precip',
+        radarLayerCode: 'bdsa',
+        units: 'in',
+        bins: [
+          { label: '0.10 - 0.25', value: 0.10, color: '#00fb90' },
+          { label: '0.25 - 0.50', value: 0.25, color: '#00bb00' },
+          { label: '0.50 - 0.75', value: 0.50, color: '#018d01' },
+          { label: '0.75 - 1.00', value: 0.75, color: '#005000' },
+          { label: '1.00 - 1.50', value: 1.00, color: '#fdfd04' },
+          { label: '1.50 - 2.00', value: 1.50, color: '#e1be00' },
+          { label: '2.00 - 2.50', value: 2.00, color: '#f18d00' },
+          { label: '2.50 - 3.00', value: 2.50, color: '#bf5300' },
+          { label: '3.00 - 4.00', value: 3.00, color: '#ff0101' },
+          { label: '4.00 - 5.00', value: 4.00, color: '#c10000' },
+          { label: '5.00 - 6.00', value: 5.00, color: '#a10000' },
+          { label: '6.00 - 8.00', value: 6.00, color: '#9d01b1' },
+          { label: '8.00 - 10.0', value: 8.00, color: '#ff01f2' },
+          { label: '10.0 - 12.0', value: 10.00, color: '#d0c3ff' },
+          { label: '12.0+', value: 12.00, color: '#ffffff' }
+        ]
+      },
+      DAA: {
+        label: '1 Hour Precip',
+        radarLayerCode: 'boha',
+        units: 'in',
+        bins: [
+          { label: '0.05 - 0.10', value: 0.05, color: '#00fb90' },
+          { label: '0.10 - 0.25', value: 0.10, color: '#00bb00' },
+          { label: '0.25 - 0.50', value: 0.25, color: '#018d01' },
+          { label: '0.50 - 0.75', value: 0.50, color: '#005000' },
+          { label: '0.75 - 1.00', value: 0.75, color: '#fdfd04' },
+          { label: '1.00 - 1.25', value: 1.00, color: '#e1be00' },
+          { label: '1.25 - 1.50', value: 1.25, color: '#f18d00' },
+          { label: '1.50 - 2.00', value: 1.50, color: '#bf5300' },
+          { label: '2.00 - 2.50', value: 2.00, color: '#ff0101' },
+          { label: '2.50 - 3.00', value: 2.50, color: '#c10000' },
+          { label: '3.00 - 4.00', value: 3.00, color: '#9d01b1' },
+          { label: '4.00+', value: 4.00, color: '#ffffff' }
+        ]
       }
     };
 
-    let activeSource = "KHDC";
-    let activeProduct = "DTA";
-    let opacity = 0.72;
-    let activeOverlay = null;
-    let activeRangeRing = null;
-    let activeLoadedUrl = null;
+    const state = {
+      source: 'KHDC',
+      product: 'DTA',
+      opacity: 0.75,
+      weatherLayer: null,
+      countyLayer: null,
+      pinned: false,
+      pinMarker: null,
+      querySeq: 0,
+      lastMoveQuery: 0
+    };
 
-    function bustCache(url) {
-      const sep = url.includes('?') ? '&' : '?';
-      return `${url}${sep}_=${Date.now()}`;
+    function getRadarLayerName() {
+      const radar = RADARS[state.source];
+      const product = PRODUCTS[state.product];
+      return `${radar.station}_${product.radarLayerCode}`;
     }
 
-    function boundsFromRadar(lat, lon, rangeKm) {
-      const latDelta = rangeKm / 111.32;
-      const lonDelta = rangeKm / (111.32 * Math.cos(lat * Math.PI / 180));
-      return [[lat - latDelta, lon - lonDelta], [lat + latDelta, lon + lonDelta]];
+    function getRadarWmsUrl() {
+      return `https://opengeo.ncep.noaa.gov/geoserver/${RADARS[state.source].station}/ows`;
     }
 
     function setStatus(html) {
-      const el = document.getElementById('layer-status');
+      const el = document.getElementById('status');
       if (el) el.innerHTML = html;
     }
 
-    function setOpenLink(url) {
-      const el = document.getElementById('open-image-link');
-      if (!el) return;
+    function formatLatLng(latlng) {
+      return `${latlng.lat.toFixed(4)}°, ${latlng.lng.toFixed(4)}°`;
+    }
 
-      if (!url) {
-        el.innerHTML = '';
-        return;
+    function valueColor(value) {
+      if (value === null || Number.isNaN(value)) return '#555';
+      const bins = PRODUCTS[state.product].bins;
+      let color = bins[0].color;
+      for (const bin of bins) {
+        if (value >= bin.value) color = bin.color;
+      }
+      return color;
+    }
+
+    function formatValue(value, valueKind) {
+      if (value === null || value === undefined || Number.isNaN(Number(value)) || Number(value) <= 0) {
+        return { text: 'No data', color: '#555' };
       }
 
-      const cleanUrl = url.replace(/([?&])_=\d+$/, '');
-      el.innerHTML = `<a href="${cleanUrl}" target="_blank" rel="noopener">Open raw product image</a>`;
-    }
+      const numeric = Number(value);
+      const color = valueColor(numeric);
 
-    function clearActiveOverlay() {
-      if (activeOverlay && map.hasLayer(activeOverlay)) map.removeLayer(activeOverlay);
-      if (activeRangeRing && map.hasLayer(activeRangeRing)) map.removeLayer(activeRangeRing);
-      activeOverlay = null;
-      activeRangeRing = null;
-      activeLoadedUrl = null;
-      setOpenLink(null);
-    }
-
-    function candidateRadarUrls(siteId, productCode) {
-      const product = radarProducts[productCode];
-      const codes = [productCode];
-      if (product && product.legacy) codes.push(product.legacy);
-
-      const urls = [];
-      codes.forEach(code => {
-        urls.push(`https://radar.weather.gov/ridge/RadarImg/${code}/${siteId}_${code}_0.gif`);
-        urls.push(`https://radar.weather.gov/ridge/standard/${siteId}_${code}_0.gif`);
-      });
-      return urls;
-    }
-
-    function loadFirstWorkingImage(urls, callback, failedUrls = []) {
-      if (!urls.length) {
-        callback(null, failedUrls);
-        return;
+      if (valueKind === 'bin') {
+        const bin = nearestLegendBin(numeric);
+        return { text: bin ? `${bin.label} in` : `${numeric.toFixed(2)} in`, color };
       }
 
-      const rawUrl = urls[0];
-      const testUrl = bustCache(rawUrl);
-      const img = new Image();
+      return { text: `${numeric.toFixed(2)} in`, color };
+    }
 
-      img.onload = () => {
-        if (img.naturalWidth > 10 && img.naturalHeight > 10) {
-          callback(testUrl, failedUrls);
-        } else {
-          loadFirstWorkingImage(urls.slice(1), callback, failedUrls.concat(rawUrl));
+    function nearestLegendBin(value) {
+      const bins = PRODUCTS[state.product].bins;
+      let selected = null;
+      for (const bin of bins) {
+        if (value >= bin.value) selected = bin;
+      }
+      return selected || bins[0];
+    }
+
+    function updateReadout(latlng, value, meta, valueKind = 'value') {
+      const formatted = formatValue(value, valueKind);
+      document.getElementById('readout-value').textContent = formatted.text;
+      document.getElementById('readout-value').style.color = formatted.color;
+      document.getElementById('readout-coords').textContent = formatLatLng(latlng);
+      document.getElementById('readout-meta').textContent = meta;
+    }
+
+    function extractNumericValueFromProperties(props) {
+      if (!props) return { value: null, kind: 'value', key: null };
+
+      const preferredKeys = [
+        'GRAY_INDEX', 'gray_index', 'value', 'VALUE', 'pixel_value', 'Pixel Value',
+        'PixelValue', 'band_1', 'Band1', 'BAND_1', 'RASTERVALU', 'grid_value'
+      ];
+
+      for (const key of preferredKeys) {
+        if (props[key] !== undefined && props[key] !== null) {
+          const num = Number(props[key]);
+          if (!Number.isNaN(num)) return { value: num, kind: 'value', key };
         }
-      };
+      }
 
-      img.onerror = () => {
-        loadFirstWorkingImage(urls.slice(1), callback, failedUrls.concat(rawUrl));
-      };
+      const paletteKeys = ['PALETTE_INDEX', 'palette_index', 'Palette Index'];
+      for (const key of paletteKeys) {
+        if (props[key] !== undefined && props[key] !== null) {
+          const idx = Number(props[key]);
+          if (!Number.isNaN(idx)) {
+            const bins = PRODUCTS[state.product].bins;
+            const bin = bins[Math.max(0, Math.min(bins.length - 1, Math.round(idx)))];
+            return { value: bin ? bin.value : null, kind: 'bin', key };
+          }
+        }
+      }
 
-      img.src = testUrl;
+      for (const [key, raw] of Object.entries(props)) {
+        const num = Number(raw);
+        if (!Number.isNaN(num)) return { value: num, kind: 'value', key };
+      }
+
+      return { value: null, kind: 'value', key: null };
     }
 
-    function showRadar(siteId) {
-      clearActiveOverlay();
+    function queryRadarValue(latlng, seq) {
+      const point = map.latLngToContainerPoint(latlng);
+      const size = map.getSize();
+      const bounds = map.getBounds();
+      const sw = bounds.getSouthWest();
+      const ne = bounds.getNorthEast();
+      const bbox = [sw.lng, sw.lat, ne.lng, ne.lat].join(',');
+      const layerName = getRadarLayerName();
+      const url = `${getRadarWmsUrl()}?service=WMS&version=1.1.1&request=GetFeatureInfo` +
+        `&layers=${encodeURIComponent(layerName)}` +
+        `&query_layers=${encodeURIComponent(layerName)}` +
+        `&styles=` +
+        `&bbox=${encodeURIComponent(bbox)}` +
+        `&width=${size.x}&height=${size.y}` +
+        `&x=${Math.round(point.x)}&y=${Math.round(point.y)}` +
+        `&srs=EPSG:4326` +
+        `&info_format=application/json`;
 
-      const site = radarSites[siteId];
-      const product = radarProducts[activeProduct];
-      const rangeKm = 230;
-      const bounds = boundsFromRadar(site.lat, site.lon, rangeKm);
-      const urls = candidateRadarUrls(siteId, activeProduct);
+      fetch(url)
+        .then(res => {
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          return res.json();
+        })
+        .then(data => {
+          if (seq !== state.querySeq) return;
+          let props = null;
+          if (data && data.features && data.features.length > 0) {
+            props = data.features[0].properties || null;
+          }
+          const parsed = extractNumericValueFromProperties(props);
+          const keyText = parsed.key ? ` · ${parsed.key}` : '';
+          updateReadout(latlng, parsed.value, `${state.source} ${PRODUCTS[state.product].label}${keyText}`, parsed.kind);
+        })
+        .catch(err => {
+          if (seq !== state.querySeq) return;
+          updateReadout(latlng, null, `${state.source} query failed: ${err.message}`);
+        });
+    }
 
-      setStatus(`<span class="status-warn">Trying:</span> ${siteId} ${product.label} (${activeProduct}); fallback ${product.legacy}`);
+    function queryMrmsValue(latlng, seq) {
+      const size = map.getSize();
+      const bounds = map.getBounds();
+      const sw = bounds.getSouthWest();
+      const ne = bounds.getNorthEast();
+      const mapExtent = [sw.lng, sw.lat, ne.lng, ne.lat].join(',');
+      const geometry = `${latlng.lng},${latlng.lat}`;
+      const url = `${MRMS_ARCGIS_URL}/identify?f=json` +
+        `&geometry=${encodeURIComponent(geometry)}` +
+        `&geometryType=esriGeometryPoint` +
+        `&sr=4326` +
+        `&layers=all:0` +
+        `&tolerance=3` +
+        `&mapExtent=${encodeURIComponent(mapExtent)}` +
+        `&imageDisplay=${size.x},${size.y},96` +
+        `&returnGeometry=false`;
 
-      loadFirstWorkingImage(urls, (workingUrl, failedUrls) => {
-        if (!workingUrl) {
-          setStatus(
-            `<span class="status-bad">No radar precip image loaded.</span><br>` +
-            `Tried ${siteId} ${activeProduct}` + (product.legacy ? ` and ${product.legacy}` : '') + `.<br>` +
-            `This can happen when the radar precip product is unavailable/expired, or if radar.weather.gov is not exposing that product. Tried:<br>` +
-            failedUrls.map(u => `• ${u}`).join('<br>')
-          );
+      fetch(url)
+        .then(res => {
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          return res.json();
+        })
+        .then(data => {
+          if (seq !== state.querySeq) return;
+          let props = null;
+          if (data && data.results && data.results.length > 0) {
+            props = data.results[0].attributes || null;
+          }
+          const parsed = extractNumericValueFromProperties(props);
+          const keyText = parsed.key ? ` · ${parsed.key}` : '';
+          updateReadout(latlng, parsed.value, `MRMS QPE${keyText}`, parsed.kind);
+        })
+        .catch(err => {
+          if (seq !== state.querySeq) return;
+          updateReadout(latlng, null, `MRMS query failed: ${err.message}`);
+        });
+    }
+
+    function queryAt(latlng) {
+      const seq = ++state.querySeq;
+      if (state.source === 'MRMS') queryMrmsValue(latlng, seq);
+      else queryRadarValue(latlng, seq);
+    }
+
+    const ArcGisDynamicLayer = L.GridLayer.extend({
+      createTile: function(coords, done) {
+        const tile = document.createElement('img');
+        tile.alt = '';
+        tile.setAttribute('role', 'presentation');
+        tile.style.width = '256px';
+        tile.style.height = '256px';
+        tile.onload = () => done(null, tile);
+        tile.onerror = () => done(new Error('MRMS tile failed'), tile);
+
+        const nw = coords.multiplyBy(256);
+        const se = nw.add([256, 256]);
+        const nwPoint = map.unproject(nw, coords.z);
+        const sePoint = map.unproject(se, coords.z);
+        const sw3857 = map.options.crs.project(L.latLng(sePoint.lat, nwPoint.lng));
+        const ne3857 = map.options.crs.project(L.latLng(nwPoint.lat, sePoint.lng));
+        const bbox = [sw3857.x, sw3857.y, ne3857.x, ne3857.y].join(',');
+
+        tile.src = `${MRMS_ARCGIS_URL}/export?f=image` +
+          `&bbox=${bbox}` +
+          `&bboxSR=3857&imageSR=3857` +
+          `&size=256,256` +
+          `&format=png32` +
+          `&transparent=true` +
+          `&layers=show:0` +
+          `&_=${Date.now()}`;
+        return tile;
+      }
+    });
+
+    function clearWeatherLayer() {
+      if (state.weatherLayer && map.hasLayer(state.weatherLayer)) map.removeLayer(state.weatherLayer);
+      state.weatherLayer = null;
+    }
+
+    function loadWeatherLayer() {
+      clearWeatherLayer();
+
+      if (state.source === 'MRMS') {
+        state.weatherLayer = new ArcGisDynamicLayer({
+          opacity: state.opacity,
+          tileSize: 256,
+          attribution: 'NOAA / NWS MRMS QPE'
+        }).addTo(map);
+        setStatus(`<span class="warn">Loading:</span> MRMS QPE`);
+        setTimeout(() => setStatus(`<span class="good">Layer:</span> MRMS QPE`), 700);
+      } else {
+        const layerName = getRadarLayerName();
+        state.weatherLayer = L.tileLayer.wms(getRadarWmsUrl(), {
+          layers: layerName,
+          format: 'image/png',
+          transparent: true,
+          version: '1.1.1',
+          opacity: state.opacity,
+          zIndex: 450,
+          attribution: 'NOAA / NWS NEXRAD Level III'
+        }).addTo(map);
+        setStatus(`<span class="good">Layer:</span> ${layerName}`);
+      }
+
+      bringBoundariesFront();
+      buildLegend();
+    }
+
+    function buildLegend() {
+      const product = PRODUCTS[state.product];
+      const rows = product.bins.map(bin =>
+        `<div class="legend-row"><span>${bin.label} ${product.units}</span><span class="swatch" style="background:${bin.color}"></span></div>`
+      ).join('');
+      document.getElementById('legend-body').innerHTML = rows;
+      document.getElementById('legend-title').textContent = state.source === 'MRMS'
+        ? `MRMS QPE / ${product.label}`
+        : `${state.source} ${product.label}`;
+    }
+
+    function loadCountyBoundaries() {
+      fetch(COUNTY_GEOJSON_URL)
+        .then(res => res.json())
+        .then(geojson => {
+          const filtered = {
+            type: 'FeatureCollection',
+            features: geojson.features.filter(featureTouchesLocalBbox)
+          };
+
+          state.countyLayer = L.geoJSON(filtered, {
+            interactive: false,
+            style: {
+              color: '#000000',
+              weight: 1,
+              opacity: 0.85,
+              fillOpacity: 0
+            }
+          }).addTo(map);
+
+          bringBoundariesFront();
+        })
+        .catch(() => setStatus(`<span class="bad">County boundaries failed to load.</span>`));
+    }
+
+    function featureTouchesLocalBbox(feature) {
+      const box = { west: -92.4, east: -86.5, south: 28.4, north: 32.4 };
+      let found = false;
+
+      function scan(coords) {
+        if (found) return;
+        if (typeof coords[0] === 'number' && typeof coords[1] === 'number') {
+          const lon = coords[0];
+          const lat = coords[1];
+          if (lon >= box.west && lon <= box.east && lat >= box.south && lat <= box.north) found = true;
           return;
         }
+        coords.forEach(scan);
+      }
 
-        activeLoadedUrl = workingUrl;
-        activeOverlay = L.imageOverlay(workingUrl, bounds, {
-          opacity,
-          interactive: false,
-          attribution: 'NWS radar product image'
-        }).addTo(map);
-
-        activeRangeRing = L.circle([site.lat, site.lon], {
-          radius: rangeKm * 1000,
-          weight: 1,
-          fill: false,
-          opacity: 0.35
-        }).addTo(map);
-
-        const productCodeLoaded = workingUrl.match(/_([A-Z0-9]{3})_0\.gif/)?.[1] || activeProduct;
-        const usedFallback = productCodeLoaded !== activeProduct;
-
-        setStatus(
-          `<span class="status-good">Loaded:</span> ${siteId} ${productCodeLoaded}` +
-          (usedFallback ? ` <span class="status-warn">fallback</span>` : '') +
-          `<br>${radarProducts[activeProduct].label}`
-        );
-        setOpenLink(workingUrl);
-      });
+      if (feature.geometry && feature.geometry.coordinates) scan(feature.geometry.coordinates);
+      return found;
     }
 
-    function showMrms() {
-      clearActiveOverlay();
-
-      const cfg = mrmsProducts.qpe;
-      activeOverlay = L.tileLayer.wms(cfg.url, {
-        layers: cfg.layers,
-        format: 'image/png',
-        transparent: true,
-        opacity,
-        version: '1.3.0',
-        attribution: 'NOAA / NWS MRMS QPE'
-      }).addTo(map);
-
-      activeOverlay.on('tileload', () => {
-        setStatus(`<span class="status-good">Loaded:</span> MRMS QPE WMS layer ${cfg.layers}`);
-      });
-
-      activeOverlay.on('tileerror', () => {
-        setStatus(`<span class="status-bad">MRMS tile failed:</span> MRMS endpoint/layer ID likely needs tuning.`);
-      });
-
-      setStatus(`<span class="status-warn">Loading:</span> MRMS QPE WMS`);
+    function bringBoundariesFront() {
+      if (state.countyLayer) state.countyLayer.bringToFront();
     }
 
-    function refreshLayer() {
-      if (activeSource === "MRMS") showMrms();
-      else showRadar(activeSource);
-    }
-
-    const ControlBox = L.Control.extend({
+    const Controls = L.Control.extend({
       options: { position: 'topright' },
-      onAdd: function () {
-        const div = L.DomUtil.create('div', 'control-box');
+      onAdd: function() {
+        const div = L.DomUtil.create('div', 'panel');
         div.innerHTML = `
-          <h2>Precip Layer</h2>
-          <label><input type="radio" name="precip-source" value="KHDC" checked> KHDC radar</label>
-          <label><input type="radio" name="precip-source" value="KMOB"> KMOB radar</label>
-          <label><input type="radio" name="precip-source" value="MRMS"> MRMS</label>
+          <h1>Precip Accumulation</h1>
+          <label><input type="radio" name="source" value="KHDC" checked> KHDC radar</label>
+          <label><input type="radio" name="source" value="KMOB"> KMOB radar</label>
+          <label><input type="radio" name="source" value="MRMS"> MRMS QPE</label>
 
-          <div class="control-row" id="radar-product-row">
+          <div class="section">
             <label>
-              Radar product
+              Product
               <select id="product-select">
-                <option value="DTA" selected>Storm Total Precip - DTA</option>
-                <option value="DAA">1 Hour Precip - DAA</option>
+                <option value="DTA" selected>Storm Total Precip</option>
+                <option value="DAA">1 Hour Precip</option>
               </select>
             </label>
           </div>
 
-          <div class="control-row">
+          <div class="section">
             <label>
-              Opacity
-              <input id="opacity-slider" type="range" min="0" max="1" step="0.05" value="0.72">
+              Opacity <span id="opacity-label">75%</span>
+              <input id="opacity" type="range" min="0" max="1" step="0.05" value="0.75">
             </label>
+            <button id="refresh" type="button">Refresh</button>
           </div>
 
-          <div class="control-row">
-            <button id="refresh-button" type="button">Refresh layer</button>
-          </div>
-
-          <div id="layer-status" class="control-note"></div>
-          <div id="open-image-link" class="control-note"></div>
-          <div class="control-note">
-            Radar precip is single-site image data. If DTA/DAA are not available, the app tries legacy NTP/N1P. MRMS is separate gridded QPE.
-          </div>
+          <div id="status" class="status"></div>
         `;
         L.DomEvent.disableClickPropagation(div);
         L.DomEvent.disableScrollPropagation(div);
@@ -387,59 +553,96 @@
       }
     });
 
-    map.addControl(new ControlBox());
-
-    function updateRadarProductVisibility() {
-      const row = document.getElementById('radar-product-row');
-      if (row) row.style.display = activeSource === 'MRMS' ? 'none' : 'block';
-    }
-
-    document.querySelectorAll('input[name="precip-source"]').forEach(input => {
-      input.addEventListener('change', event => {
-        activeSource = event.target.value;
-        updateRadarProductVisibility();
-        refreshLayer();
-      });
+    const Readout = L.Control.extend({
+      options: { position: 'bottomleft' },
+      onAdd: function() {
+        const div = L.DomUtil.create('div', 'readout');
+        div.innerHTML = `
+          <strong>Cursor Readout</strong>
+          <div id="readout-value" class="value">Move cursor</div>
+          <div id="readout-coords" class="coords">--</div>
+          <div id="readout-meta" class="meta">Click map to pin; click again to unpin.</div>
+        `;
+        L.DomEvent.disableClickPropagation(div);
+        L.DomEvent.disableScrollPropagation(div);
+        return div;
+      }
     });
-
-    document.getElementById('product-select').addEventListener('change', event => {
-      activeProduct = event.target.value;
-      refreshLayer();
-    });
-
-    document.getElementById('opacity-slider').addEventListener('input', event => {
-      opacity = Number(event.target.value);
-      if (activeOverlay && activeOverlay.setOpacity) activeOverlay.setOpacity(opacity);
-    });
-
-    document.getElementById('refresh-button').addEventListener('click', refreshLayer);
-
-    L.control.layers(baseLayers, null, { collapsed: true }).addTo(map);
-
-    const siteMarkers = L.layerGroup([
-      L.marker([radarSites.KHDC.lat, radarSites.KHDC.lon]).bindPopup('<b>KHDC</b><br>Hammond, LA radar'),
-      L.marker([radarSites.KMOB.lat, radarSites.KMOB.lon]).bindPopup('<b>KMOB</b><br>Mobile, AL radar')
-    ]).addTo(map);
-
-    L.control.layers(null, { "Radar sites": siteMarkers }, { collapsed: true }).addTo(map);
 
     const Legend = L.Control.extend({
       options: { position: 'bottomright' },
-      onAdd: function () {
+      onAdd: function() {
         const div = L.DomUtil.create('div', 'legend');
         div.innerHTML = `
-          <div class="legend-title">Precip Accumulation</div>
-          <div class="legend-gradient"></div>
-          <div class="legend-scale"><span>Lower</span><span>Higher</span></div>
-          <div style="margin-top:6px;">Approximate; source legend depends on selected product.</div>
+          <div id="legend-title" class="legend-title">Legend</div>
+          <div id="legend-body"></div>
         `;
         return div;
       }
     });
 
+    map.addControl(new Controls());
+    map.addControl(new Readout());
     map.addControl(new Legend());
-    updateRadarProductVisibility();
-    showRadar(activeSource);
+
+    document.querySelectorAll('input[name="source"]').forEach(input => {
+      input.addEventListener('change', e => {
+        state.source = e.target.value;
+        state.pinned = false;
+        if (state.pinMarker) map.removeLayer(state.pinMarker);
+        state.pinMarker = null;
+        loadWeatherLayer();
+      });
+    });
+
+    document.getElementById('product-select').addEventListener('change', e => {
+      state.product = e.target.value;
+      state.pinned = false;
+      if (state.pinMarker) map.removeLayer(state.pinMarker);
+      state.pinMarker = null;
+      loadWeatherLayer();
+    });
+
+    document.getElementById('opacity').addEventListener('input', e => {
+      state.opacity = Number(e.target.value);
+      document.getElementById('opacity-label').textContent = `${Math.round(state.opacity * 100)}%`;
+      if (state.weatherLayer && state.weatherLayer.setOpacity) state.weatherLayer.setOpacity(state.opacity);
+    });
+
+    document.getElementById('refresh').addEventListener('click', loadWeatherLayer);
+
+    map.on('mousemove', e => {
+      if (state.pinned) return;
+      const now = Date.now();
+      if (now - state.lastMoveQuery < 250) return;
+      state.lastMoveQuery = now;
+      queryAt(e.latlng);
+    });
+
+    map.on('click', e => {
+      if (state.pinned) {
+        state.pinned = false;
+        if (state.pinMarker) map.removeLayer(state.pinMarker);
+        state.pinMarker = null;
+        document.getElementById('readout-meta').textContent = 'Unpinned. Move cursor to sample.';
+        return;
+      }
+
+      state.pinned = true;
+      if (state.pinMarker) map.removeLayer(state.pinMarker);
+      state.pinMarker = L.circleMarker(e.latlng, {
+        radius: 6,
+        color: '#000',
+        weight: 2,
+        fillColor: '#fff',
+        fillOpacity: 1
+      }).addTo(map);
+      queryAt(e.latlng);
+      document.getElementById('readout-meta').textContent = 'Pinned point. Click map again to unpin.';
+    });
+
+    loadWeatherLayer();
+    loadCountyBoundaries();
   </script>
 </body>
 </html>

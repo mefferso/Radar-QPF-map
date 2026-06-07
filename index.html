@@ -25,7 +25,7 @@
       padding: 10px 14px;
       border-radius: 8px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.25);
-      max-width: 390px;
+      max-width: 430px;
     }
 
     .title-box h1 {
@@ -44,7 +44,7 @@
       padding: 12px;
       border-radius: 8px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.25);
-      width: 285px;
+      width: 305px;
     }
 
     .control-box h2 {
@@ -65,15 +65,14 @@
       margin-top: 4px;
     }
 
-    .control-row {
-      margin-top: 10px;
-    }
+    .control-row { margin-top: 10px; }
 
     .control-note {
       margin-top: 9px;
       font-size: 11px;
       color: #444;
       line-height: 1.35;
+      word-break: break-word;
     }
 
     .status-good { color: #1f6b2a; font-weight: bold; }
@@ -89,9 +88,7 @@
       font-size: 12px;
     }
 
-    button:hover {
-      background: #ececec;
-    }
+    button:hover { background: #ececec; }
 
     .legend {
       background: rgba(255, 255, 255, 0.95);
@@ -102,10 +99,7 @@
       line-height: 1.25;
     }
 
-    .legend-title {
-      font-weight: bold;
-      margin-bottom: 6px;
-    }
+    .legend-title { font-weight: bold; margin-bottom: 6px; }
 
     .legend-gradient {
       width: 220px;
@@ -133,9 +127,7 @@
       font-size: 11px;
     }
 
-    .leaflet-control-attribution {
-      font-size: 10px;
-    }
+    .leaflet-control-attribution { font-size: 10px; }
   </style>
 </head>
 <body>
@@ -144,7 +136,7 @@
   <div class="title-box">
     <h1>Radar / MRMS Precip Accumulation</h1>
     <div>
-      KHDC and KMOB use single-site radar precipitation image overlays. MRMS is kept separate so it does not accidentally show reflectivity pretending to be rainfall.
+      KHDC/KMOB now try dual-pol precip products first: DTA for storm-total and DAA for 1-hour. Legacy NTP/N1P are only fallbacks.
     </div>
   </div>
 
@@ -175,42 +167,29 @@
     baseLayers["OpenStreetMap"].addTo(map);
 
     const radarSites = {
-      KHDC: {
-        label: "KHDC - Hammond, LA",
-        lat: 30.5195,
-        lon: -90.4179
-      },
-      KMOB: {
-        label: "KMOB - Mobile, AL",
-        lat: 30.6794,
-        lon: -88.2397
-      }
+      KHDC: { label: "KHDC - Hammond, LA", lat: 30.5195, lon: -90.4179 },
+      KMOB: { label: "KMOB - Mobile, AL", lat: 30.6794, lon: -88.2397 }
     };
 
     const radarProducts = {
-      NTP: {
-        label: "Storm Total Precip",
-        fallback: "DTA"
-      },
-      N1P: {
-        label: "1 Hour Precip",
-        fallback: null
-      }
+      DTA: { label: "Storm Total Precip", legacy: "NTP" },
+      DAA: { label: "1 Hour Precip", legacy: "N1P" }
     };
 
     const mrmsProducts = {
-      stp: {
-        label: "MRMS precip accumulation",
+      qpe: {
+        label: "MRMS QPE",
         url: "https://mapservices.weather.noaa.gov/raster/services/obs/mrms_qpe/MapServer/WMSServer",
         layers: "0"
       }
     };
 
     let activeSource = "KHDC";
-    let activeProduct = "NTP";
+    let activeProduct = "DTA";
     let opacity = 0.72;
     let activeOverlay = null;
     let activeRangeRing = null;
+    let activeLoadedUrl = null;
 
     function bustCache(url) {
       const sep = url.includes('?') ? '&' : '?';
@@ -223,24 +202,69 @@
       return [[lat - latDelta, lon - lonDelta], [lat + latDelta, lon + lonDelta]];
     }
 
-    function radarImageUrl(site, product) {
-      return bustCache(`https://radar.weather.gov/ridge/RadarImg/${product}/${site}_${product}_0.gif`);
-    }
-
     function setStatus(html) {
       const el = document.getElementById('layer-status');
       if (el) el.innerHTML = html;
     }
 
+    function setOpenLink(url) {
+      const el = document.getElementById('open-image-link');
+      if (!el) return;
+
+      if (!url) {
+        el.innerHTML = '';
+        return;
+      }
+
+      const cleanUrl = url.replace(/([?&])_=\d+$/, '');
+      el.innerHTML = `<a href="${cleanUrl}" target="_blank" rel="noopener">Open raw product image</a>`;
+    }
+
     function clearActiveOverlay() {
-      if (activeOverlay && map.hasLayer(activeOverlay)) {
-        map.removeLayer(activeOverlay);
-      }
-      if (activeRangeRing && map.hasLayer(activeRangeRing)) {
-        map.removeLayer(activeRangeRing);
-      }
+      if (activeOverlay && map.hasLayer(activeOverlay)) map.removeLayer(activeOverlay);
+      if (activeRangeRing && map.hasLayer(activeRangeRing)) map.removeLayer(activeRangeRing);
       activeOverlay = null;
       activeRangeRing = null;
+      activeLoadedUrl = null;
+      setOpenLink(null);
+    }
+
+    function candidateRadarUrls(siteId, productCode) {
+      const product = radarProducts[productCode];
+      const codes = [productCode];
+      if (product && product.legacy) codes.push(product.legacy);
+
+      const urls = [];
+      codes.forEach(code => {
+        urls.push(`https://radar.weather.gov/ridge/RadarImg/${code}/${siteId}_${code}_0.gif`);
+        urls.push(`https://radar.weather.gov/ridge/standard/${siteId}_${code}_0.gif`);
+      });
+      return urls;
+    }
+
+    function loadFirstWorkingImage(urls, callback, failedUrls = []) {
+      if (!urls.length) {
+        callback(null, failedUrls);
+        return;
+      }
+
+      const rawUrl = urls[0];
+      const testUrl = bustCache(rawUrl);
+      const img = new Image();
+
+      img.onload = () => {
+        if (img.naturalWidth > 10 && img.naturalHeight > 10) {
+          callback(testUrl, failedUrls);
+        } else {
+          loadFirstWorkingImage(urls.slice(1), callback, failedUrls.concat(rawUrl));
+        }
+      };
+
+      img.onerror = () => {
+        loadFirstWorkingImage(urls.slice(1), callback, failedUrls.concat(rawUrl));
+      };
+
+      img.src = testUrl;
     }
 
     function showRadar(siteId) {
@@ -250,43 +274,51 @@
       const product = radarProducts[activeProduct];
       const rangeKm = 230;
       const bounds = boundsFromRadar(site.lat, site.lon, rangeKm);
-      const primaryUrl = radarImageUrl(siteId, activeProduct);
+      const urls = candidateRadarUrls(siteId, activeProduct);
 
-      activeOverlay = L.imageOverlay(primaryUrl, bounds, {
-        opacity,
-        interactive: false,
-        crossOrigin: false,
-        attribution: 'NWS radar image overlay'
-      }).addTo(map);
+      setStatus(`<span class="status-warn">Trying:</span> ${siteId} ${product.label} (${activeProduct}); fallback ${product.legacy}`);
 
-      activeOverlay.on('load', () => {
-        setStatus(`<span class="status-good">Loaded:</span> ${siteId} ${product.label} (${activeProduct})`);
-      });
-
-      activeOverlay.on('error', () => {
-        if (product.fallback) {
-          const fallbackProduct = product.fallback;
-          activeOverlay.setUrl(radarImageUrl(siteId, fallbackProduct));
-          setStatus(`<span class="status-warn">Primary product failed:</span> tried ${activeProduct}; falling back to ${fallbackProduct}.`);
-        } else {
-          setStatus(`<span class="status-bad">Image failed:</span> ${siteId} ${activeProduct}. That product may not be available right now.`);
+      loadFirstWorkingImage(urls, (workingUrl, failedUrls) => {
+        if (!workingUrl) {
+          setStatus(
+            `<span class="status-bad">No radar precip image loaded.</span><br>` +
+            `Tried ${siteId} ${activeProduct}` + (product.legacy ? ` and ${product.legacy}` : '') + `.<br>` +
+            `This can happen when the radar precip product is unavailable/expired, or if radar.weather.gov is not exposing that product. Tried:<br>` +
+            failedUrls.map(u => `• ${u}`).join('<br>')
+          );
+          return;
         }
+
+        activeLoadedUrl = workingUrl;
+        activeOverlay = L.imageOverlay(workingUrl, bounds, {
+          opacity,
+          interactive: false,
+          attribution: 'NWS radar product image'
+        }).addTo(map);
+
+        activeRangeRing = L.circle([site.lat, site.lon], {
+          radius: rangeKm * 1000,
+          weight: 1,
+          fill: false,
+          opacity: 0.35
+        }).addTo(map);
+
+        const productCodeLoaded = workingUrl.match(/_([A-Z0-9]{3})_0\.gif/)?.[1] || activeProduct;
+        const usedFallback = productCodeLoaded !== activeProduct;
+
+        setStatus(
+          `<span class="status-good">Loaded:</span> ${siteId} ${productCodeLoaded}` +
+          (usedFallback ? ` <span class="status-warn">fallback</span>` : '') +
+          `<br>${radarProducts[activeProduct].label}`
+        );
+        setOpenLink(workingUrl);
       });
-
-      activeRangeRing = L.circle([site.lat, site.lon], {
-        radius: rangeKm * 1000,
-        weight: 1,
-        fill: false,
-        opacity: 0.35
-      }).addTo(map);
-
-      setStatus(`<span class="status-warn">Loading:</span> ${siteId} ${product.label} (${activeProduct})`);
     }
 
     function showMrms() {
       clearActiveOverlay();
 
-      const cfg = mrmsProducts.stp;
+      const cfg = mrmsProducts.qpe;
       activeOverlay = L.tileLayer.wms(cfg.url, {
         layers: cfg.layers,
         format: 'image/png',
@@ -297,22 +329,19 @@
       }).addTo(map);
 
       activeOverlay.on('tileload', () => {
-        setStatus(`<span class="status-good">Loaded:</span> MRMS QPE service`);
+        setStatus(`<span class="status-good">Loaded:</span> MRMS QPE WMS layer ${cfg.layers}`);
       });
 
       activeOverlay.on('tileerror', () => {
-        setStatus(`<span class="status-bad">MRMS tile failed:</span> endpoint/layer may need adjustment. At least it is not fake reflectivity now.`);
+        setStatus(`<span class="status-bad">MRMS tile failed:</span> MRMS endpoint/layer ID likely needs tuning.`);
       });
 
       setStatus(`<span class="status-warn">Loading:</span> MRMS QPE WMS`);
     }
 
     function refreshLayer() {
-      if (activeSource === "MRMS") {
-        showMrms();
-      } else {
-        showRadar(activeSource);
-      }
+      if (activeSource === "MRMS") showMrms();
+      else showRadar(activeSource);
     }
 
     const ControlBox = L.Control.extend({
@@ -325,12 +354,12 @@
           <label><input type="radio" name="precip-source" value="KMOB"> KMOB radar</label>
           <label><input type="radio" name="precip-source" value="MRMS"> MRMS</label>
 
-          <div class="control-row">
+          <div class="control-row" id="radar-product-row">
             <label>
               Radar product
               <select id="product-select">
-                <option value="NTP" selected>Storm Total Precip</option>
-                <option value="N1P">1 Hour Precip</option>
+                <option value="DTA" selected>Storm Total Precip - DTA</option>
+                <option value="DAA">1 Hour Precip - DAA</option>
               </select>
             </label>
           </div>
@@ -347,8 +376,9 @@
           </div>
 
           <div id="layer-status" class="control-note"></div>
+          <div id="open-image-link" class="control-note"></div>
           <div class="control-note">
-            Note: radar precip images are single-site products. MRMS is a separate gridded QPE service and may need the exact NOAA layer ID tuned if the public service changes.
+            Radar precip is single-site image data. If DTA/DAA are not available, the app tries legacy NTP/N1P. MRMS is separate gridded QPE.
           </div>
         `;
         L.DomEvent.disableClickPropagation(div);
@@ -359,9 +389,15 @@
 
     map.addControl(new ControlBox());
 
+    function updateRadarProductVisibility() {
+      const row = document.getElementById('radar-product-row');
+      if (row) row.style.display = activeSource === 'MRMS' ? 'none' : 'block';
+    }
+
     document.querySelectorAll('input[name="precip-source"]').forEach(input => {
       input.addEventListener('change', event => {
         activeSource = event.target.value;
+        updateRadarProductVisibility();
         refreshLayer();
       });
     });
@@ -373,9 +409,7 @@
 
     document.getElementById('opacity-slider').addEventListener('input', event => {
       opacity = Number(event.target.value);
-      if (activeOverlay && activeOverlay.setOpacity) {
-        activeOverlay.setOpacity(opacity);
-      }
+      if (activeOverlay && activeOverlay.setOpacity) activeOverlay.setOpacity(opacity);
     });
 
     document.getElementById('refresh-button').addEventListener('click', refreshLayer);
@@ -387,9 +421,7 @@
       L.marker([radarSites.KMOB.lat, radarSites.KMOB.lon]).bindPopup('<b>KMOB</b><br>Mobile, AL radar')
     ]).addTo(map);
 
-    L.control.layers(null, {
-      "Radar sites": siteMarkers
-    }, { collapsed: true }).addTo(map);
+    L.control.layers(null, { "Radar sites": siteMarkers }, { collapsed: true }).addTo(map);
 
     const Legend = L.Control.extend({
       options: { position: 'bottomright' },
@@ -406,6 +438,7 @@
     });
 
     map.addControl(new Legend());
+    updateRadarProductVisibility();
     showRadar(activeSource);
   </script>
 </body>

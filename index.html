@@ -16,7 +16,7 @@
       font-family: Arial, Helvetica, sans-serif;
     }
 
-    .leaflet-container { background: #eef3f7; }
+    .leaflet-container { background: #f7f7f7; }
 
     .panel,
     .readout,
@@ -34,9 +34,7 @@
       width: 235px;
     }
 
-    .leaflet-top.leaflet-left .panel {
-      margin-top: 8px;
-    }
+    .leaflet-top.leaflet-left .panel { margin-top: 8px; }
 
     .panel h1 {
       margin: 0 0 7px 0;
@@ -163,22 +161,20 @@
       color: #333;
     }
 
-    .city-label {
-      pointer-events: none;
-    }
+    .city-label { pointer-events: none; }
 
     .city-text {
-      color: #ffffff;
+      color: #111;
       font-size: 13px;
       font-weight: 800;
-      letter-spacing: 0.2px;
+      letter-spacing: 0.1px;
       white-space: nowrap;
       text-shadow:
-        -1px -1px 0 #000,
-         1px -1px 0 #000,
-        -1px  1px 0 #000,
-         1px  1px 0 #000,
-         0 0 4px #000;
+        -1px -1px 0 #fff,
+         1px -1px 0 #fff,
+        -1px  1px 0 #fff,
+         1px  1px 0 #fff,
+         0 0 4px #fff;
     }
 
     .city-dot {
@@ -190,40 +186,6 @@
       border-radius: 50%;
       margin-right: 4px;
       vertical-align: middle;
-      box-shadow: 0 0 3px #000;
-    }
-
-    .interstate-shield {
-      pointer-events: none;
-      width: 34px;
-      height: 24px;
-      border-radius: 5px 5px 8px 8px;
-      background: #174a9c;
-      border: 2px solid #ffffff;
-      color: #ffffff;
-      font-size: 12px;
-      font-weight: 900;
-      line-height: 24px;
-      text-align: center;
-      text-shadow: 0 1px 1px #000;
-      box-shadow: 0 0 3px #000;
-      position: relative;
-    }
-
-    .interstate-shield::before {
-      content: '';
-      position: absolute;
-      left: 0;
-      right: 0;
-      top: 0;
-      height: 6px;
-      background: #c51f2d;
-      border-radius: 3px 3px 0 0;
-    }
-
-    .interstate-shield span {
-      position: relative;
-      z-index: 1;
     }
 
     .leaflet-control-attribution { font-size: 10px; }
@@ -240,10 +202,11 @@
   <div id="map"></div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
 
   <script>
     const map = L.map('map', {
-      center: [30.35, -89.55],
+      center: [30.35, -89.80],
       zoom: 8,
       preferCanvas: true
     });
@@ -259,12 +222,12 @@
     map.getPane('cityPane').style.zIndex = 760;
     map.getPane('cityPane').style.pointerEvents = 'none';
 
-    const LOCAL_BBOX = { west: -92.4, east: -86.5, south: 28.4, north: 32.4 };
+    const LOCAL_BBOX = { west: -92.5, east: -88.0, south: 28.5, north: 32.0 };
     const COUNTY_GEOJSON_URL = 'https://raw.githubusercontent.com/plotly/datasets/master/geojson-counties-fips.json';
     const LAKES_GEOJSON_URL = 'https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_10m_lakes.geojson';
+    const STATES_GEOJSON_URL = 'https://raw.githubusercontent.com/PublicaMundi/MappingAPI/master/data/geojson/us-states.json';
     const MRMS_ARCGIS_URL = 'https://mapservices.weather.noaa.gov/raster/rest/services/obs/mrms_qpe/MapServer';
 
-    // Clean basemap: lakes/water visible, but not every damn driveway and subdivision road label.
     const baseMap = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
       maxZoom: 19,
       attribution: 'Base &copy; Esri'
@@ -279,6 +242,22 @@
       DTA: { label: 'Storm Total Precip', radarLayerCode: 'bdsa', units: 'in' },
       DAA: { label: '1 Hour Precip', radarLayerCode: 'boha', units: 'in' }
     };
+
+    const LIX_FIPS = new Set([
+      '22005','22007','22033','22037','22047','22051','22057','22063','22071','22075','22077','22087','22089','22091','22093','22095','22103','22105','22109','22117','22121','22125',
+      '28005','28045','28047','28059','28109','28113','28147','28157'
+    ]);
+
+    const LIX_CITIES = [
+      { name: 'Baton Rouge', coords: [30.4515, -91.1871] },
+      { name: 'New Orleans', coords: [29.9511, -90.0715] },
+      { name: 'Gulfport', coords: [30.3674, -89.0928] },
+      { name: 'McComb', coords: [31.2438, -90.4532] },
+      { name: 'Woodville', coords: [31.1046, -91.2993] },
+      { name: 'Hammond', coords: [30.5044, -90.4612] },
+      { name: 'Bogalusa', coords: [30.7910, -89.8487] },
+      { name: 'Houma', coords: [29.5958, -90.7195] }
+    ];
 
     const PRECIP_SCALE = [
       { value: 0.0, label: '0', color: '#000000' },
@@ -307,9 +286,10 @@
       product: 'DTA',
       opacity: 0.72,
       weatherLayer: null,
-      countyLayer: null,
+      countyContextLayer: null,
+      stateLayer: null,
       lakeLayer: null,
-      interstateLayer: null,
+      wfoBoundaryLayer: null,
       cityLayer: null,
       pinned: false,
       pinMarker: null,
@@ -322,11 +302,7 @@
 
     function hexToRgb(hex) {
       const cleaned = hex.replace('#', '');
-      return {
-        r: parseInt(cleaned.slice(0, 2), 16),
-        g: parseInt(cleaned.slice(2, 4), 16),
-        b: parseInt(cleaned.slice(4, 6), 16)
-      };
+      return { r: parseInt(cleaned.slice(0, 2), 16), g: parseInt(cleaned.slice(2, 4), 16), b: parseInt(cleaned.slice(4, 6), 16) };
     }
 
     function colorDistance(a, b) {
@@ -337,15 +313,10 @@
       const rgb = { r, g, b };
       let best = null;
       let bestDistance = Infinity;
-
       PRECIP_SCALE.forEach((item, index) => {
         const dist = colorDistance(rgb, hexToRgb(item.color));
-        if (dist < bestDistance) {
-          bestDistance = dist;
-          best = { ...item, index, distance: dist };
-        }
+        if (dist < bestDistance) { bestDistance = dist; best = { ...item, index, distance: dist }; }
       });
-
       if (!best || bestDistance > 105) return null;
       return best;
     }
@@ -358,9 +329,7 @@
     }
 
     function getRadarLayerName() {
-      const radar = RADARS[state.source];
-      const product = PRODUCTS[state.product];
-      return `${radar.station}_${product.radarLayerCode}`;
+      return `${RADARS[state.source].station}_${PRODUCTS[state.product].radarLayerCode}`;
     }
 
     function getRadarWmsUrl() {
@@ -391,33 +360,17 @@
 
     function loadWeatherLayer() {
       clearWeatherLayer();
-
       if (state.source === 'MRMS') {
-        state.weatherLayer = new ArcGisDynamicLayer({
-          opacity: state.opacity,
-          tileSize: 256,
-          pane: 'weatherPane',
-          attribution: 'NOAA / NWS MRMS QPE'
-        }).addTo(map);
+        state.weatherLayer = new ArcGisDynamicLayer({ opacity: state.opacity, tileSize: 256, pane: 'weatherPane', attribution: 'NOAA / NWS MRMS QPE' }).addTo(map);
         setStatus(`<span class="good">Layer:</span> MRMS QPE`);
       } else {
         const layerName = getRadarLayerName();
-        state.weatherLayer = L.tileLayer.wms(getRadarWmsUrl(), {
-          layers: layerName,
-          format: 'image/png',
-          transparent: true,
-          version: '1.1.1',
-          opacity: state.opacity,
-          pane: 'weatherPane',
-          crossOrigin: 'anonymous',
-          attribution: 'NOAA / NWS NEXRAD Level III'
-        }).addTo(map);
+        state.weatherLayer = L.tileLayer.wms(getRadarWmsUrl(), { layers: layerName, format: 'image/png', transparent: true, version: '1.1.1', opacity: state.opacity, pane: 'weatherPane', crossOrigin: 'anonymous', attribution: 'NOAA / NWS NEXRAD Level III' }).addTo(map);
         setStatus(`<span class="good">Layer:</span> ${layerName}`);
       }
-
       bringReferenceFront();
       buildLegend();
-      if (!state.pinned) updateReadout(map.getCenter(), 'Move cursor', '#555', 'Cursor samples the displayed radar pixel color. Click map to pin.');
+      if (!state.pinned) updateReadout(map.getCenter(), 'Move cursor', '#555', 'Cursor samples displayed radar pixel color. Click map to pin.');
     }
 
     const ArcGisDynamicLayer = L.GridLayer.extend({
@@ -430,7 +383,6 @@
         tile.style.height = '256px';
         tile.onload = () => done(null, tile);
         tile.onerror = () => done(new Error('MRMS tile failed'), tile);
-
         const nw = coords.multiplyBy(256);
         const se = nw.add([256, 256]);
         const nwPoint = map.unproject(nw, coords.z);
@@ -438,76 +390,45 @@
         const sw3857 = map.options.crs.project(L.latLng(sePoint.lat, nwPoint.lng));
         const ne3857 = map.options.crs.project(L.latLng(nwPoint.lat, sePoint.lng));
         const bbox = [sw3857.x, sw3857.y, ne3857.x, ne3857.y].join(',');
-
-        tile.src = `${MRMS_ARCGIS_URL}/export?f=image` +
-          `&bbox=${bbox}` +
-          `&bboxSR=3857&imageSR=3857` +
-          `&size=256,256` +
-          `&format=png32` +
-          `&transparent=true` +
-          `&layers=show:0` +
-          `&_=${Date.now()}`;
+        tile.src = `${MRMS_ARCGIS_URL}/export?f=image&bbox=${bbox}&bboxSR=3857&imageSR=3857&size=256,256&format=png32&transparent=true&layers=show:0&_=${Date.now()}`;
         return tile;
       }
     });
 
     function sampleDisplayedWeatherColor(latlng) {
       if (!state.weatherLayer || !state.weatherLayer._tiles) return { ok: false, reason: 'weather tiles not ready' };
-
       const zoom = map.getZoom();
       const tileSize = state.weatherLayer.getTileSize ? state.weatherLayer.getTileSize() : L.point(256, 256);
       const point = map.project(latlng, zoom);
       const tileCoords = point.unscaleBy(tileSize).floor();
       tileCoords.z = zoom;
-
-      let key;
-      if (state.weatherLayer._tileCoordsToKey) key = state.weatherLayer._tileCoordsToKey(tileCoords);
-      else key = `${tileCoords.x}:${tileCoords.y}:${tileCoords.z}`;
-
+      const key = state.weatherLayer._tileCoordsToKey ? state.weatherLayer._tileCoordsToKey(tileCoords) : `${tileCoords.x}:${tileCoords.y}:${tileCoords.z}`;
       const tileRecord = state.weatherLayer._tiles[key];
       const tile = tileRecord && tileRecord.el;
       if (!tile || !tile.complete || !tile.naturalWidth || !tile.naturalHeight) return { ok: false, reason: 'tile not loaded yet' };
-
       const rawX = point.x - tileCoords.x * tileSize.x;
       const rawY = point.y - tileCoords.y * tileSize.y;
       const x = Math.floor(rawX * (tile.naturalWidth / tileSize.x));
       const y = Math.floor(rawY * (tile.naturalHeight / tileSize.y));
-
       try {
         sampleCanvas.width = tile.naturalWidth;
         sampleCanvas.height = tile.naturalHeight;
         sampleCtx.clearRect(0, 0, sampleCanvas.width, sampleCanvas.height);
         sampleCtx.drawImage(tile, 0, 0);
-        const pixel = sampleCtx.getImageData(x, y, 1, 1).data;
-        const [r, g, b, a] = pixel;
-
+        const [r, g, b, a] = sampleCtx.getImageData(x, y, 1, 1).data;
         if (a < 10) return { ok: true, empty: true, reason: 'transparent/no echo' };
-
         const match = nearestScaleColor(r, g, b);
         if (!match) return { ok: true, empty: true, reason: `unmatched pixel rgb(${r},${g},${b})` };
-
         return { ok: true, empty: false, match, rgb: { r, g, b, a } };
-      } catch (err) {
-        return { ok: false, reason: `canvas sample blocked: ${err.message}` };
-      }
+      } catch (err) { return { ok: false, reason: `canvas sample blocked: ${err.message}` }; }
     }
 
     function queryAt(latlng) {
       const seq = ++state.querySeq;
       const sampled = sampleDisplayedWeatherColor(latlng);
-
       if (seq !== state.querySeq) return;
-
-      if (sampled.ok && !sampled.empty) {
-        updateReadout(latlng, binTextForScaleItem(sampled.match), sampled.match.color, `${state.source} ${PRODUCTS[state.product].label} · sampled display color`);
-        return;
-      }
-
-      if (sampled.ok && sampled.empty) {
-        updateReadout(latlng, 'No data', '#555', `${state.source} ${PRODUCTS[state.product].label} · ${sampled.reason}`);
-        return;
-      }
-
+      if (sampled.ok && !sampled.empty) { updateReadout(latlng, binTextForScaleItem(sampled.match), sampled.match.color, `${state.source} ${PRODUCTS[state.product].label} · sampled display color`); return; }
+      if (sampled.ok && sampled.empty) { updateReadout(latlng, 'No data', '#555', `${state.source} ${PRODUCTS[state.product].label} · ${sampled.reason}`); return; }
       if (state.source === 'MRMS') queryMrmsIdentify(latlng, seq, sampled.reason);
       else queryWmsFeatureInfo(latlng, seq, sampled.reason);
     }
@@ -520,33 +441,15 @@
       const ne = bounds.getNorthEast();
       const bbox = [sw.lng, sw.lat, ne.lng, ne.lat].join(',');
       const layerName = getRadarLayerName();
-      const url = `${getRadarWmsUrl()}?service=WMS&version=1.1.1&request=GetFeatureInfo` +
-        `&layers=${encodeURIComponent(layerName)}` +
-        `&query_layers=${encodeURIComponent(layerName)}` +
-        `&styles=` +
-        `&bbox=${encodeURIComponent(bbox)}` +
-        `&width=${size.x}&height=${size.y}` +
-        `&x=${Math.round(point.x)}&y=${Math.round(point.y)}` +
-        `&srs=EPSG:4326` +
-        `&info_format=application/json`;
-
-      fetch(url)
-        .then(res => {
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
-          return res.json();
-        })
-        .then(data => {
-          if (seq !== state.querySeq) return;
-          const props = data?.features?.[0]?.properties || null;
-          const parsed = extractNumericValue(props);
-          if (parsed === null) throw new Error('no numeric value returned');
-          const approx = nearestValueToScale(parsed);
-          updateReadout(latlng, `${approx.text}`, approx.color, `${state.source} GetFeatureInfo · sampled failed: ${sampleReason}`);
-        })
-        .catch(err => {
-          if (seq !== state.querySeq) return;
-          updateReadout(latlng, 'Unavailable', '#b00020', `Readout failed: ${sampleReason}; GetFeatureInfo ${err.message}`);
-        });
+      const url = `${getRadarWmsUrl()}?service=WMS&version=1.1.1&request=GetFeatureInfo&layers=${encodeURIComponent(layerName)}&query_layers=${encodeURIComponent(layerName)}&styles=&bbox=${encodeURIComponent(bbox)}&width=${size.x}&height=${size.y}&x=${Math.round(point.x)}&y=${Math.round(point.y)}&srs=EPSG:4326&info_format=application/json`;
+      fetch(url).then(res => { if (!res.ok) throw new Error(`HTTP ${res.status}`); return res.json(); }).then(data => {
+        if (seq !== state.querySeq) return;
+        const props = data?.features?.[0]?.properties || null;
+        const parsed = extractNumericValue(props);
+        if (parsed === null) throw new Error('no numeric value returned');
+        const approx = nearestValueToScale(parsed);
+        updateReadout(latlng, `${approx.text}`, approx.color, `${state.source} GetFeatureInfo · sampled failed: ${sampleReason}`);
+      }).catch(err => { if (seq !== state.querySeq) return; updateReadout(latlng, 'Unavailable', '#b00020', `Readout failed: ${sampleReason}; GetFeatureInfo ${err.message}`); });
     }
 
     function queryMrmsIdentify(latlng, seq, sampleReason) {
@@ -556,48 +459,24 @@
       const ne = bounds.getNorthEast();
       const mapExtent = [sw.lng, sw.lat, ne.lng, ne.lat].join(',');
       const geometry = `${latlng.lng},${latlng.lat}`;
-      const url = `${MRMS_ARCGIS_URL}/identify?f=json` +
-        `&geometry=${encodeURIComponent(geometry)}` +
-        `&geometryType=esriGeometryPoint` +
-        `&sr=4326` +
-        `&layers=all:0` +
-        `&tolerance=3` +
-        `&mapExtent=${encodeURIComponent(mapExtent)}` +
-        `&imageDisplay=${size.x},${size.y},96` +
-        `&returnGeometry=false`;
-
-      fetch(url)
-        .then(res => {
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
-          return res.json();
-        })
-        .then(data => {
-          if (seq !== state.querySeq) return;
-          const props = data?.results?.[0]?.attributes || null;
-          const parsed = extractNumericValue(props);
-          if (parsed === null) throw new Error('no numeric value returned');
-          const approx = nearestValueToScale(parsed);
-          updateReadout(latlng, `${approx.text}`, approx.color, `MRMS identify · sampled failed: ${sampleReason}`);
-        })
-        .catch(err => {
-          if (seq !== state.querySeq) return;
-          updateReadout(latlng, 'Unavailable', '#b00020', `MRMS readout failed: ${sampleReason}; identify ${err.message}`);
-        });
+      const url = `${MRMS_ARCGIS_URL}/identify?f=json&geometry=${encodeURIComponent(geometry)}&geometryType=esriGeometryPoint&sr=4326&layers=all:0&tolerance=3&mapExtent=${encodeURIComponent(mapExtent)}&imageDisplay=${size.x},${size.y},96&returnGeometry=false`;
+      fetch(url).then(res => { if (!res.ok) throw new Error(`HTTP ${res.status}`); return res.json(); }).then(data => {
+        if (seq !== state.querySeq) return;
+        const props = data?.results?.[0]?.attributes || null;
+        const parsed = extractNumericValue(props);
+        if (parsed === null) throw new Error('no numeric value returned');
+        const approx = nearestValueToScale(parsed);
+        updateReadout(latlng, `${approx.text}`, approx.color, `MRMS identify · sampled failed: ${sampleReason}`);
+      }).catch(err => { if (seq !== state.querySeq) return; updateReadout(latlng, 'Unavailable', '#b00020', `MRMS readout failed: ${sampleReason}; identify ${err.message}`); });
     }
 
     function extractNumericValue(props) {
       if (!props) return null;
       const keys = ['GRAY_INDEX', 'gray_index', 'value', 'VALUE', 'pixel_value', 'Pixel Value', 'PixelValue', 'band_1', 'Band1', 'BAND_1', 'RASTERVALU', 'grid_value'];
       for (const key of keys) {
-        if (props[key] !== undefined && props[key] !== null) {
-          const num = Number(props[key]);
-          if (!Number.isNaN(num)) return num;
-        }
+        if (props[key] !== undefined && props[key] !== null) { const num = Number(props[key]); if (!Number.isNaN(num)) return num; }
       }
-      for (const raw of Object.values(props)) {
-        const num = Number(raw);
-        if (!Number.isNaN(num)) return num;
-      }
+      for (const raw of Object.values(props)) { const num = Number(raw); if (!Number.isNaN(num)) return num; }
       return null;
     }
 
@@ -608,9 +487,7 @@
     }
 
     function buildLegend() {
-      document.getElementById('legend-title').textContent = state.source === 'MRMS'
-        ? `MRMS QPE / ${PRODUCTS[state.product].label}`
-        : `${state.source} ${PRODUCTS[state.product].label}`;
+      document.getElementById('legend-title').textContent = state.source === 'MRMS' ? `MRMS QPE / ${PRODUCTS[state.product].label}` : `${state.source} ${PRODUCTS[state.product].label}`;
       document.getElementById('legend-labels').innerHTML = PRECIP_SCALE.map(item => `<span>${item.label}</span>`).join('');
     }
 
@@ -619,8 +496,7 @@
       function scan(coords) {
         if (found) return;
         if (typeof coords[0] === 'number' && typeof coords[1] === 'number') {
-          const lon = coords[0];
-          const lat = coords[1];
+          const lon = coords[0]; const lat = coords[1];
           if (lon >= LOCAL_BBOX.west && lon <= LOCAL_BBOX.east && lat >= LOCAL_BBOX.south && lat <= LOCAL_BBOX.north) found = true;
           return;
         }
@@ -630,108 +506,72 @@
       return found;
     }
 
-    function loadCountyBoundaries() {
-      fetch(COUNTY_GEOJSON_URL)
-        .then(res => res.json())
-        .then(geojson => {
-          const filtered = { type: 'FeatureCollection', features: geojson.features.filter(featureTouchesLocalBbox) };
-          state.countyLayer = L.geoJSON(filtered, {
-            interactive: false,
-            pane: 'referencePane',
-            style: { color: '#000000', weight: 1.1, opacity: 0.85, fillOpacity: 0 }
-          }).addTo(map);
-          bringReferenceFront();
-        })
-        .catch(() => setStatus(`<span class="bad">County boundaries failed to load.</span>`));
+    function dissolveFeatures(features) {
+      if (!features.length) return null;
+      let merged = features[0];
+      for (let i = 1; i < features.length; i++) {
+        try { merged = turf.union(merged, features[i]); }
+        catch (err) { console.warn('Turf union failed on feature', i, err); }
+      }
+      return merged;
+    }
+
+    function getFips(feature) {
+      return String(feature.id || feature.properties?.GEOID || feature.properties?.FIPS || '').padStart(5, '0');
+    }
+
+    function loadWfoReferenceLayer() {
+      fetch(COUNTY_GEOJSON_URL).then(res => res.json()).then(geojson => {
+        const local = geojson.features.filter(featureTouchesLocalBbox);
+        const lixFeatures = local.filter(f => LIX_FIPS.has(getFips(f)));
+        state.countyContextLayer = L.geoJSON(local, {
+          interactive: false,
+          pane: 'referencePane',
+          style: feature => {
+            const inLix = LIX_FIPS.has(getFips(feature));
+            return { color: inLix ? '#9a9a9a' : '#c6c6c6', weight: inLix ? 0.65 : 0.45, opacity: inLix ? 0.65 : 0.45, fillOpacity: 0 };
+          }
+        }).addTo(map);
+        const dissolved = dissolveFeatures(lixFeatures);
+        if (dissolved) {
+          state.wfoBoundaryLayer = L.geoJSON(dissolved, { interactive: false, pane: 'referencePane', style: { color: '#000000', weight: 3.0, opacity: 0.95, fillOpacity: 0 } }).addTo(map);
+        }
+        bringReferenceFront();
+      }).catch(err => setStatus(`<span class="bad">WFO layer failed:</span> ${err.message}`));
+    }
+
+    function loadStateLines() {
+      fetch(STATES_GEOJSON_URL).then(res => res.json()).then(geojson => {
+        const wanted = new Set(['Louisiana', 'Mississippi', 'Alabama']);
+        const filtered = { type: 'FeatureCollection', features: geojson.features.filter(f => wanted.has(f.properties?.name)) };
+        state.stateLayer = L.geoJSON(filtered, { interactive: false, pane: 'referencePane', style: { color: '#555555', weight: 1.4, opacity: 0.9, fillOpacity: 0 } }).addTo(map);
+        bringReferenceFront();
+      }).catch(() => console.warn('State outlines failed to load'));
     }
 
     function loadLakes() {
-      fetch(LAKES_GEOJSON_URL)
-        .then(res => res.json())
-        .then(geojson => {
-          const filtered = { type: 'FeatureCollection', features: geojson.features.filter(featureTouchesLocalBbox) };
-          state.lakeLayer = L.geoJSON(filtered, {
-            interactive: false,
-            pane: 'referencePane',
-            style: { color: '#000000', weight: 1.0, opacity: 0.8, fillOpacity: 0 }
-          }).addTo(map);
-          bringReferenceFront();
-        })
-        .catch(() => console.warn('Lake outlines failed to load'));
-    }
-
-    function addInterstates() {
-      if (state.interstateLayer && map.hasLayer(state.interstateLayer)) map.removeLayer(state.interstateLayer);
-      const layer = L.layerGroup([], { pane: 'referencePane' });
-
-      const routes = [
-        { name: '10', coords: [[30.45,-91.19],[30.39,-90.92],[30.25,-90.63],[30.08,-90.48],[29.98,-90.22],[29.95,-90.07],[30.03,-89.93],[30.22,-89.78],[30.31,-89.54],[30.34,-89.32],[30.39,-89.09],[30.41,-88.89],[30.42,-88.69],[30.45,-88.43],[30.69,-88.04],[30.68,-87.75]], labels: [[30.06,-90.42],[30.31,-89.55],[30.42,-88.75]] },
-        { name: '12', coords: [[30.45,-91.19],[30.43,-90.95],[30.42,-90.72],[30.43,-90.50],[30.50,-90.25],[30.48,-90.03],[30.30,-89.78]], labels: [[30.44,-90.55],[30.42,-90.03]] },
-        { name: '55', coords: [[30.05,-90.47],[30.20,-90.46],[30.36,-90.47],[30.52,-90.46],[30.77,-90.45],[31.00,-90.46],[31.35,-90.45]], labels: [[30.32,-90.47],[30.89,-90.46]] },
-        { name: '59', coords: [[30.30,-89.78],[30.47,-89.73],[30.66,-89.66],[30.88,-89.56],[31.12,-89.42],[31.33,-89.29]], labels: [[30.63,-89.68],[31.12,-89.42]] },
-        { name: '65', coords: [[30.69,-88.04],[30.86,-88.02],[31.05,-88.02],[31.24,-87.96],[31.42,-87.88]], labels: [[31.02,-88.02]] }
-      ];
-
-      routes.forEach(route => {
-        L.polyline(route.coords, { pane: 'referencePane', color: '#ffffff', weight: 6, opacity: 0.95, interactive: false }).addTo(layer);
-        L.polyline(route.coords, { pane: 'referencePane', color: '#d64f1f', weight: 3, opacity: 0.95, interactive: false }).addTo(layer);
-        route.labels.forEach(point => {
-          L.marker(point, {
-            pane: 'cityPane',
-            interactive: false,
-            icon: L.divIcon({
-              className: '',
-              html: `<div class="interstate-shield"><span>${route.name}</span></div>`,
-              iconSize: [34, 24],
-              iconAnchor: [17, 12]
-            })
-          }).addTo(layer);
-        });
-      });
-
-      state.interstateLayer = layer.addTo(map);
-      bringReferenceFront();
+      fetch(LAKES_GEOJSON_URL).then(res => res.json()).then(geojson => {
+        const filtered = { type: 'FeatureCollection', features: geojson.features.filter(featureTouchesLocalBbox) };
+        state.lakeLayer = L.geoJSON(filtered, { interactive: false, pane: 'referencePane', style: { color: '#000000', weight: 1.2, opacity: 0.85, fillOpacity: 0 } }).addTo(map);
+        bringReferenceFront();
+      }).catch(() => console.warn('Lake outlines failed to load'));
     }
 
     function addCityLabels() {
       if (state.cityLayer && map.hasLayer(state.cityLayer)) map.removeLayer(state.cityLayer);
-      const cities = [
-        { name: 'Baton Rouge', coords: [30.4515, -91.1871] },
-        { name: 'New Orleans', coords: [29.9511, -90.0715] },
-        { name: 'Hammond', coords: [30.5044, -90.4612] },
-        { name: 'Covington', coords: [30.4755, -90.1009] },
-        { name: 'Slidell', coords: [30.2752, -89.7812] },
-        { name: 'Picayune', coords: [30.5255, -89.6795] },
-        { name: 'Bogalusa', coords: [30.7910, -89.8487] },
-        { name: 'Bay St. Louis', coords: [30.3088, -89.3300] },
-        { name: 'Gulfport', coords: [30.3674, -89.0928] },
-        { name: 'Biloxi', coords: [30.3960, -88.8853] },
-        { name: 'Pascagoula', coords: [30.3658, -88.5561] },
-        { name: 'Mobile', coords: [30.6954, -88.0399] },
-        { name: 'Hattiesburg', coords: [31.3271, -89.2903] },
-        { name: 'McComb', coords: [31.2446, -90.4532] }
-      ];
-
-      state.cityLayer = L.layerGroup(cities.map(city =>
-        L.marker(city.coords, {
-          pane: 'cityPane',
-          interactive: false,
-          icon: L.divIcon({
-            className: 'city-label',
-            html: `<div class="city-text"><span class="city-dot"></span>${city.name}</div>`,
-            iconSize: [120, 18],
-            iconAnchor: [4, 9]
-          })
-        })
-      )).addTo(map);
-
+      state.cityLayer = L.layerGroup(LIX_CITIES.map(city => L.marker(city.coords, {
+        pane: 'cityPane',
+        interactive: false,
+        icon: L.divIcon({ className: 'city-label', html: `<div class="city-text"><span class="city-dot"></span>${city.name}</div>`, iconSize: [120, 18], iconAnchor: [4, 9] })
+      }))).addTo(map);
       bringReferenceFront();
     }
 
     function bringReferenceFront() {
+      if (state.countyContextLayer) state.countyContextLayer.bringToFront();
+      if (state.stateLayer) state.stateLayer.bringToFront();
       if (state.lakeLayer) state.lakeLayer.bringToFront();
-      if (state.countyLayer) state.countyLayer.bringToFront();
-      if (state.interstateLayer) state.interstateLayer.eachLayer(layer => layer.bringToFront && layer.bringToFront());
+      if (state.wfoBoundaryLayer) state.wfoBoundaryLayer.bringToFront();
       if (state.cityLayer) state.cityLayer.eachLayer(layer => layer.setZIndexOffset && layer.setZIndexOffset(1000));
     }
 
@@ -744,27 +584,9 @@
           <label><input type="radio" name="source" value="KHDC" checked> KHDC radar</label>
           <label><input type="radio" name="source" value="KMOB"> KMOB radar</label>
           <label><input type="radio" name="source" value="MRMS"> MRMS QPE</label>
-
-          <div class="section">
-            <label>
-              Product
-              <select id="product-select">
-                <option value="DTA" selected>Storm Total Precip</option>
-                <option value="DAA">1 Hour Precip</option>
-              </select>
-            </label>
-          </div>
-
-          <div class="section">
-            <label>
-              Opacity <span id="opacity-label">72%</span>
-              <input id="opacity" type="range" min="0" max="1" step="0.05" value="0.72">
-            </label>
-            <button id="refresh" type="button">Refresh</button>
-          </div>
-
-          <div id="status" class="status"></div>
-        `;
+          <div class="section"><label>Product<select id="product-select"><option value="DTA" selected>Storm Total Precip</option><option value="DAA">1 Hour Precip</option></select></label></div>
+          <div class="section"><label>Opacity <span id="opacity-label">72%</span><input id="opacity" type="range" min="0" max="1" step="0.05" value="0.72"></label><button id="refresh" type="button">Refresh</button></div>
+          <div id="status" class="status"></div>`;
         L.DomEvent.disableClickPropagation(div);
         L.DomEvent.disableScrollPropagation(div);
         return div;
@@ -775,12 +597,7 @@
       options: { position: 'bottomleft' },
       onAdd: function() {
         const div = L.DomUtil.create('div', 'readout');
-        div.innerHTML = `
-          <strong>Cursor Readout</strong>
-          <div id="readout-value" class="value">Move cursor</div>
-          <div id="readout-coords" class="coords">--</div>
-          <div id="readout-meta" class="meta">Samples displayed radar pixel color. Click map to pin; click again to unpin.</div>
-        `;
+        div.innerHTML = `<strong>Cursor Readout</strong><div id="readout-value" class="value">Move cursor</div><div id="readout-coords" class="coords">--</div><div id="readout-meta" class="meta">Samples displayed radar pixel color. Click map to pin; click again to unpin.</div>`;
         L.DomEvent.disableClickPropagation(div);
         L.DomEvent.disableScrollPropagation(div);
         return div;
@@ -791,12 +608,7 @@
       options: { position: 'bottomright' },
       onAdd: function() {
         const div = L.DomUtil.create('div', 'legend');
-        div.innerHTML = `
-          <div id="legend-title" class="legend-title">Legend</div>
-          <div class="legend-bar"></div>
-          <div id="legend-labels" class="legend-labels"></div>
-          <div class="legend-note">Rainfall accumulation in inches. Readout returns the displayed color bin.</div>
-        `;
+        div.innerHTML = `<div id="legend-title" class="legend-title">Legend</div><div class="legend-bar"></div><div id="legend-labels" class="legend-labels"></div><div class="legend-note">Rainfall accumulation in inches. Readout returns the displayed color bin.</div>`;
         L.DomEvent.disableClickPropagation(div);
         L.DomEvent.disableScrollPropagation(div);
         return div;
@@ -808,66 +620,30 @@
     map.addControl(new Legend());
 
     document.querySelectorAll('input[name="source"]').forEach(input => {
-      input.addEventListener('change', e => {
-        state.source = e.target.value;
-        state.pinned = false;
-        if (state.pinMarker) map.removeLayer(state.pinMarker);
-        state.pinMarker = null;
-        loadWeatherLayer();
-      });
+      input.addEventListener('change', e => { state.source = e.target.value; state.pinned = false; if (state.pinMarker) map.removeLayer(state.pinMarker); state.pinMarker = null; loadWeatherLayer(); });
     });
 
-    document.getElementById('product-select').addEventListener('change', e => {
-      state.product = e.target.value;
-      state.pinned = false;
-      if (state.pinMarker) map.removeLayer(state.pinMarker);
-      state.pinMarker = null;
-      loadWeatherLayer();
-    });
+    document.getElementById('product-select').addEventListener('change', e => { state.product = e.target.value; state.pinned = false; if (state.pinMarker) map.removeLayer(state.pinMarker); state.pinMarker = null; loadWeatherLayer(); });
 
-    document.getElementById('opacity').addEventListener('input', e => {
-      state.opacity = Number(e.target.value);
-      document.getElementById('opacity-label').textContent = `${Math.round(state.opacity * 100)}%`;
-      if (state.weatherLayer && state.weatherLayer.setOpacity) state.weatherLayer.setOpacity(state.opacity);
-    });
+    document.getElementById('opacity').addEventListener('input', e => { state.opacity = Number(e.target.value); document.getElementById('opacity-label').textContent = `${Math.round(state.opacity * 100)}%`; if (state.weatherLayer && state.weatherLayer.setOpacity) state.weatherLayer.setOpacity(state.opacity); });
 
     document.getElementById('refresh').addEventListener('click', loadWeatherLayer);
 
-    map.on('mousemove', e => {
-      if (state.pinned) return;
-      const now = Date.now();
-      if (now - state.lastMoveQuery < 100) return;
-      state.lastMoveQuery = now;
-      queryAt(e.latlng);
-    });
+    map.on('mousemove', e => { if (state.pinned) return; const now = Date.now(); if (now - state.lastMoveQuery < 100) return; state.lastMoveQuery = now; queryAt(e.latlng); });
 
     map.on('click', e => {
-      if (state.pinned) {
-        state.pinned = false;
-        if (state.pinMarker) map.removeLayer(state.pinMarker);
-        state.pinMarker = null;
-        updateReadout(e.latlng, 'Unpinned', '#555', 'Move cursor to sample.');
-        return;
-      }
-
+      if (state.pinned) { state.pinned = false; if (state.pinMarker) map.removeLayer(state.pinMarker); state.pinMarker = null; updateReadout(e.latlng, 'Unpinned', '#555', 'Move cursor to sample.'); return; }
       state.pinned = true;
       if (state.pinMarker) map.removeLayer(state.pinMarker);
-      state.pinMarker = L.circleMarker(e.latlng, {
-        radius: 6,
-        color: '#000',
-        weight: 2,
-        fillColor: '#fff',
-        fillOpacity: 1,
-        pane: 'cityPane'
-      }).addTo(map);
+      state.pinMarker = L.circleMarker(e.latlng, { radius: 6, color: '#000', weight: 2, fillColor: '#fff', fillOpacity: 1, pane: 'cityPane' }).addTo(map);
       queryAt(e.latlng);
       document.getElementById('readout-meta').textContent = 'Pinned point. Click map again to unpin.';
     });
 
     loadWeatherLayer();
-    loadCountyBoundaries();
+    loadWfoReferenceLayer();
+    loadStateLines();
     loadLakes();
-    addInterstates();
     addCityLabels();
   </script>
 </body>

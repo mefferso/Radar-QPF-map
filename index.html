@@ -202,7 +202,6 @@
   <div id="map"></div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
 
   <script>
     const map = L.map('map', {
@@ -226,6 +225,7 @@
     const COUNTY_GEOJSON_URL = 'https://raw.githubusercontent.com/plotly/datasets/master/geojson-counties-fips.json';
     const LAKES_GEOJSON_URL = 'https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_10m_lakes.geojson';
     const STATES_GEOJSON_URL = 'https://raw.githubusercontent.com/PublicaMundi/MappingAPI/master/data/geojson/us-states.json';
+    const NWS_REF_MAPSERVER = 'https://mapservices.weather.noaa.gov/static/rest/services/nws_reference_maps/nws_reference_map/MapServer';
     const MRMS_ARCGIS_URL = 'https://mapservices.weather.noaa.gov/raster/rest/services/obs/mrms_qpe/MapServer';
 
     const baseMap = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
@@ -242,11 +242,6 @@
       DTA: { label: 'Storm Total Precip', radarLayerCode: 'bdsa', units: 'in' },
       DAA: { label: '1 Hour Precip', radarLayerCode: 'boha', units: 'in' }
     };
-
-    const LIX_FIPS = new Set([
-      '22005','22007','22033','22037','22047','22051','22057','22063','22071','22075','22077','22087','22089','22091','22093','22095','22103','22105','22109','22117','22121','22125',
-      '28005','28045','28047','28059','28109','28113','28147','28157'
-    ]);
 
     const LIX_CITIES = [
       { name: 'Baton Rouge', coords: [30.4515, -91.1871] },
@@ -506,38 +501,35 @@
       return found;
     }
 
-    function dissolveFeatures(features) {
-      if (!features.length) return null;
-      let merged = features[0];
-      for (let i = 1; i < features.length; i++) {
-        try { merged = turf.union(merged, features[i]); }
-        catch (err) { console.warn('Turf union failed on feature', i, err); }
-      }
-      return merged;
-    }
-
-    function getFips(feature) {
-      return String(feature.id || feature.properties?.GEOID || feature.properties?.FIPS || '').padStart(5, '0');
-    }
-
-    function loadWfoReferenceLayer() {
+    function loadCountyContext() {
       fetch(COUNTY_GEOJSON_URL).then(res => res.json()).then(geojson => {
-        const local = geojson.features.filter(featureTouchesLocalBbox);
-        const lixFeatures = local.filter(f => LIX_FIPS.has(getFips(f)));
+        const local = { type: 'FeatureCollection', features: geojson.features.filter(featureTouchesLocalBbox) };
         state.countyContextLayer = L.geoJSON(local, {
           interactive: false,
           pane: 'referencePane',
-          style: feature => {
-            const inLix = LIX_FIPS.has(getFips(feature));
-            return { color: inLix ? '#9a9a9a' : '#c6c6c6', weight: inLix ? 0.65 : 0.45, opacity: inLix ? 0.65 : 0.45, fillOpacity: 0 };
-          }
+          style: { color: '#b7b7b7', weight: 0.55, opacity: 0.65, fillOpacity: 0 }
         }).addTo(map);
-        const dissolved = dissolveFeatures(lixFeatures);
-        if (dissolved) {
-          state.wfoBoundaryLayer = L.geoJSON(dissolved, { interactive: false, pane: 'referencePane', style: { color: '#000000', weight: 3.0, opacity: 0.95, fillOpacity: 0 } }).addTo(map);
-        }
         bringReferenceFront();
-      }).catch(err => setStatus(`<span class="bad">WFO layer failed:</span> ${err.message}`));
+      }).catch(() => console.warn('County context failed to load'));
+    }
+
+    function loadOfficialLixCwaBoundary() {
+      const where = encodeURIComponent("wfo='LIX'");
+      const url = `${NWS_REF_MAPSERVER}/1/query?where=${where}&outFields=wfo,cwa,city,state,fullstaid&returnGeometry=true&outSR=4326&f=geojson`;
+
+      fetch(url).then(res => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      }).then(geojson => {
+        if (!geojson.features || !geojson.features.length) throw new Error('No LIX CWA features returned');
+        state.wfoBoundaryLayer = L.geoJSON(geojson, {
+          interactive: false,
+          pane: 'referencePane',
+          style: { color: '#000000', weight: 3.0, opacity: 0.95, fillOpacity: 0 }
+        }).addTo(map);
+        bringReferenceFront();
+        setStatus(`<span class="good">Layer:</span> official NWS LIX CWA`);
+      }).catch(err => setStatus(`<span class="bad">Official LIX CWA failed:</span> ${err.message}`));
     }
 
     function loadStateLines() {
@@ -641,7 +633,8 @@
     });
 
     loadWeatherLayer();
-    loadWfoReferenceLayer();
+    loadCountyContext();
+    loadOfficialLixCwaBoundary();
     loadStateLines();
     loadLakes();
     addCityLabels();

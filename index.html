@@ -1,222 +1,52 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang='en'>
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset='utf-8'>
+  <meta name='viewport' content='width=device-width, initial-scale=1.0'>
   <title>Radar / MRMS Precip Accumulation</title>
-
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-
+  <link rel='stylesheet' href='https://unpkg.com/leaflet@1.9.4/dist/leaflet.css'>
   <style>
-    html, body, #map {
-      height: 100%;
-      width: 100%;
-      margin: 0;
-      padding: 0;
-      font-family: Arial, Helvetica, sans-serif;
-    }
-
+    html, body, #map { height: 100%; width: 100%; margin: 0; padding: 0; font-family: Arial, Helvetica, sans-serif; }
     .leaflet-container { background: #f7f7f7; }
-
-    .panel,
-    .readout,
-    .legend {
-      background: rgba(255, 255, 255, 0.96);
-      border: 1px solid rgba(0, 0, 0, 0.22);
-      border-radius: 8px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.25);
-      color: #111;
-    }
-
-    .panel {
-      padding: 9px 10px;
-      font-size: 12px;
-      width: 235px;
-    }
-
+    .panel, .readout, .legend { background: rgba(255,255,255,0.96); border: 1px solid rgba(0,0,0,0.22); border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.25); color: #111; }
+    .panel { padding: 9px 10px; font-size: 12px; width: 235px; }
     .leaflet-top.leaflet-left .panel { margin-top: 8px; }
-
-    .panel h1 {
-      margin: 0 0 7px 0;
-      font-size: 15px;
-      line-height: 1.15;
-    }
-
-    .panel label {
-      display: block;
-      margin: 5px 0;
-      cursor: pointer;
-    }
-
-    .panel .section {
-      margin-top: 8px;
-      padding-top: 8px;
-      border-top: 1px solid #ddd;
-    }
-
-    .panel select,
-    .panel input[type="range"] {
-      width: 100%;
-      box-sizing: border-box;
-    }
-
-    .panel button {
-      margin-top: 6px;
-      padding: 4px 8px;
-      border: 1px solid #777;
-      border-radius: 4px;
-      background: #f6f6f6;
-      cursor: pointer;
-      font-size: 12px;
-    }
-
-    .status {
-      margin-top: 7px;
-      font-size: 10px;
-      line-height: 1.25;
-      color: #333;
-    }
-
+    .panel h1 { margin: 0 0 7px 0; font-size: 15px; line-height: 1.15; }
+    .panel label { display: block; margin: 5px 0; cursor: pointer; }
+    .panel .section { margin-top: 8px; padding-top: 8px; border-top: 1px solid #ddd; }
+    .panel select, .panel input[type='range'] { width: 100%; box-sizing: border-box; }
+    .panel button { margin-top: 6px; padding: 4px 8px; border: 1px solid #777; border-radius: 4px; background: #f6f6f6; cursor: pointer; font-size: 12px; }
+    .status { margin-top: 7px; font-size: 10px; line-height: 1.25; color: #333; }
     .good { color: #08751f; font-weight: bold; }
     .warn { color: #9a5700; font-weight: bold; }
     .bad { color: #b00020; font-weight: bold; }
-
-    .readout {
-      padding: 10px 12px;
-      min-width: 255px;
-      font-size: 13px;
-      line-height: 1.3;
-    }
-
-    .readout .value {
-      font-size: 25px;
-      font-weight: 800;
-      margin: 3px 0 4px 0;
-    }
-
-    .readout .coords,
-    .readout .meta {
-      font-size: 11px;
-      color: #333;
-    }
-
-    .legend {
-      padding: 10px 12px;
-      width: 520px;
-      max-width: calc(100vw - 36px);
-      font-size: 12px;
-    }
-
-    .legend-title {
-      font-weight: 800;
-      font-size: 13px;
-      margin-bottom: 7px;
-    }
-
-    .legend-bar {
-      height: 16px;
-      border: 1px solid #333;
-      background: linear-gradient(to right,
-        #000000 0%,
-        #3b3b3b 0.67%,
-        #858585 2%,
-        #ffffff 4%,
-        #00ffff 6.67%,
-        #00cc66 10%,
-        #00ff00 13.33%,
-        #bf00ff 16.67%,
-        #ff00ff 20%,
-        #3030ff 26.67%,
-        #0000c8 33.33%,
-        #ffff00 40%,
-        #ffcc00 46.67%,
-        #ff9900 53.33%,
-        #ff6600 60%,
-        #ff0000 66.67%,
-        #b00000 80%,
-        #6e0000 86.67%,
-        #ffffff 100%
-      );
-    }
-
-    .legend-labels {
-      display: grid;
-      grid-template-columns: repeat(19, 1fr);
-      gap: 0;
-      margin-top: 3px;
-      font-size: 10px;
-      font-weight: 700;
-      color: #222;
-      line-height: 1;
-    }
-
-    .legend-labels span {
-      text-align: center;
-      white-space: nowrap;
-    }
-
-    .legend-note {
-      margin-top: 6px;
-      font-size: 11px;
-      color: #333;
-    }
-
+    .readout { padding: 10px 12px; min-width: 255px; font-size: 13px; line-height: 1.3; }
+    .readout .value { font-size: 25px; font-weight: 800; margin: 3px 0 4px 0; }
+    .readout .coords, .readout .meta { font-size: 11px; color: #333; }
+    .legend { padding: 10px 12px; width: 520px; max-width: calc(100vw - 36px); font-size: 12px; }
+    .legend-title { font-weight: 800; font-size: 13px; margin-bottom: 7px; }
+    .legend-bar { height: 16px; border: 1px solid #333; background: linear-gradient(to right, #000000 0%, #3b3b3b 0.67%, #858585 2%, #ffffff 4%, #00ffff 6.67%, #00cc66 10%, #00ff00 13.33%, #bf00ff 16.67%, #ff00ff 20%, #3030ff 26.67%, #0000c8 33.33%, #ffff00 40%, #ffcc00 46.67%, #ff9900 53.33%, #ff6600 60%, #ff0000 66.67%, #b00000 80%, #6e0000 86.67%, #ffffff 100%); }
+    .legend-labels { display: grid; grid-template-columns: repeat(19, 1fr); gap: 0; margin-top: 3px; font-size: 10px; font-weight: 700; color: #222; line-height: 1; }
+    .legend-labels span { text-align: center; white-space: nowrap; }
+    .legend-note { margin-top: 6px; font-size: 11px; color: #333; }
     .city-label { pointer-events: none; }
-
-    .city-text {
-      color: #111;
-      font-size: 13px;
-      font-weight: 800;
-      letter-spacing: 0.1px;
-      white-space: nowrap;
-      text-shadow:
-        -1px -1px 0 #fff,
-         1px -1px 0 #fff,
-        -1px  1px 0 #fff,
-         1px  1px 0 #fff,
-         0 0 4px #fff;
-    }
-
-    .city-dot {
-      display: inline-block;
-      width: 5px;
-      height: 5px;
-      background: #fff;
-      border: 1px solid #000;
-      border-radius: 50%;
-      margin-right: 4px;
-      vertical-align: middle;
-    }
-
+    .city-text { color: #111; font-size: 18px; font-weight: 900; letter-spacing: 0.15px; white-space: nowrap; text-shadow: -2px -2px 0 #fff, 2px -2px 0 #fff, -2px 2px 0 #fff, 2px 2px 0 #fff, 0 0 6px #fff, 0 0 3px #fff; }
+    .city-dot { display: inline-block; width: 7px; height: 7px; background: #fff; border: 2px solid #000; border-radius: 50%; margin-right: 5px; vertical-align: middle; box-shadow: 0 0 4px #fff; }
     .leaflet-control-attribution { font-size: 10px; }
-
-    @media (max-width: 700px) {
-      .legend { width: 92vw; }
-      .legend-labels { font-size: 8px; }
-      .panel { width: 225px; }
-      .city-text { font-size: 11px; }
-    }
+    @media (max-width: 700px) { .legend { width: 92vw; } .legend-labels { font-size: 8px; } .panel { width: 225px; } .city-text { font-size: 14px; } }
   </style>
 </head>
 <body>
-  <div id="map"></div>
-
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
+  <div id='map'></div>
+  <script src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'></script>
   <script>
-    const map = L.map('map', {
-      center: [30.35, -89.80],
-      zoom: 8,
-      preferCanvas: true
-    });
+    const map = L.map('map', { center: [30.35, -89.80], zoom: 8, preferCanvas: true });
 
     map.createPane('weatherPane');
     map.getPane('weatherPane').style.zIndex = 450;
-
     map.createPane('referencePane');
     map.getPane('referencePane').style.zIndex = 700;
     map.getPane('referencePane').style.pointerEvents = 'none';
-
     map.createPane('cityPane');
     map.getPane('cityPane').style.zIndex = 760;
     map.getPane('cityPane').style.pointerEvents = 'none';
@@ -228,19 +58,16 @@
     const NWS_REF_MAPSERVER = 'https://mapservices.weather.noaa.gov/static/rest/services/nws_reference_maps/nws_reference_map/MapServer';
     const MRMS_ARCGIS_URL = 'https://mapservices.weather.noaa.gov/raster/rest/services/obs/mrms_qpe/MapServer';
 
-    const baseMap = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
-      maxZoom: 19,
-      attribution: 'Base &copy; Esri'
-    }).addTo(map);
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, attribution: 'Base &copy; Esri' }).addTo(map);
 
     const RADARS = {
-      KHDC: { label: 'KHDC', station: 'khdc', lat: 30.5195, lon: -90.4179 },
-      KMOB: { label: 'KMOB', station: 'kmob', lat: 30.6794, lon: -88.2397 }
+      KHDC: { station: 'khdc', lat: 30.5195, lon: -90.4179 },
+      KMOB: { station: 'kmob', lat: 30.6794, lon: -88.2397 }
     };
 
     const PRODUCTS = {
-      DTA: { label: 'Storm Total Precip', radarLayerCode: 'bdsa', units: 'in' },
-      DAA: { label: '1 Hour Precip', radarLayerCode: 'boha', units: 'in' }
+      DTA: { label: 'Storm Total Precip', radarLayerCode: 'bdsa' },
+      DAA: { label: '1 Hour Precip', radarLayerCode: 'boha' }
     };
 
     const LIX_CITIES = [
@@ -251,117 +78,59 @@
       { name: 'Woodville', coords: [31.1046, -91.2993] },
       { name: 'Hammond', coords: [30.5044, -90.4612] },
       { name: 'Bogalusa', coords: [30.7910, -89.8487] },
-      { name: 'Houma', coords: [29.5958, -90.7195] }
+      { name: 'Houma', coords: [29.5958, -90.7195] },
+      { name: 'Covington', coords: [30.4755, -90.1009] },
+      { name: 'Mandeville', coords: [30.3583, -90.0656] },
+      { name: 'Slidell', coords: [30.2752, -89.7812] },
+      { name: 'Picayune', coords: [30.5255, -89.6795] },
+      { name: 'Poplarville', coords: [30.8402, -89.5342] },
+      { name: 'Franklinton', coords: [30.8471, -90.1531] },
+      { name: 'Amite', coords: [30.7266, -90.5087] },
+      { name: 'Greensburg', coords: [30.8307, -90.6718] },
+      { name: 'Gonzales', coords: [30.2385, -90.9201] },
+      { name: 'Laplace', coords: [30.0666, -90.4801] },
+      { name: 'Thibodaux', coords: [29.7958, -90.8229] },
+      { name: 'Galliano', coords: [29.4422, -90.2992] },
+      { name: 'Bay St. Louis', coords: [30.3088, -89.3300] },
+      { name: 'Waveland', coords: [30.2869, -89.3762] },
+      { name: 'Diamondhead', coords: [30.3946, -89.3639] },
+      { name: 'Biloxi', coords: [30.3960, -88.8853] },
+      { name: 'Ocean Springs', coords: [30.4113, -88.8278] },
+      { name: 'Pascagoula', coords: [30.3658, -88.5561] }
     ];
 
     const PRECIP_SCALE = [
-      { value: 0.0, label: '0', color: '#000000' },
-      { value: 0.1, label: '.1', color: '#3b3b3b' },
-      { value: 0.3, label: '.3', color: '#858585' },
-      { value: 0.6, label: '.6', color: '#ffffff' },
-      { value: 1.0, label: '1', color: '#00ffff' },
-      { value: 1.5, label: '1.5', color: '#00cc66' },
-      { value: 2.0, label: '2', color: '#00ff00' },
-      { value: 2.5, label: '2.5', color: '#bf00ff' },
-      { value: 3.0, label: '3', color: '#ff00ff' },
-      { value: 4.0, label: '4', color: '#3030ff' },
-      { value: 5.0, label: '5', color: '#0000c8' },
-      { value: 6.0, label: '6', color: '#ffff00' },
-      { value: 7.0, label: '7', color: '#ffcc00' },
-      { value: 8.0, label: '8', color: '#ff9900' },
-      { value: 9.0, label: '9', color: '#ff6600' },
-      { value: 10.0, label: '10', color: '#ff0000' },
-      { value: 12.0, label: '12', color: '#b00000' },
-      { value: 13.0, label: '13', color: '#6e0000' },
-      { value: 15.0, label: '15', color: '#ffffff' }
+      { value: 0.0, label: '0', color: '#000000' }, { value: 0.1, label: '.1', color: '#3b3b3b' }, { value: 0.3, label: '.3', color: '#858585' }, { value: 0.6, label: '.6', color: '#ffffff' },
+      { value: 1.0, label: '1', color: '#00ffff' }, { value: 1.5, label: '1.5', color: '#00cc66' }, { value: 2.0, label: '2', color: '#00ff00' }, { value: 2.5, label: '2.5', color: '#bf00ff' },
+      { value: 3.0, label: '3', color: '#ff00ff' }, { value: 4.0, label: '4', color: '#3030ff' }, { value: 5.0, label: '5', color: '#0000c8' }, { value: 6.0, label: '6', color: '#ffff00' },
+      { value: 7.0, label: '7', color: '#ffcc00' }, { value: 8.0, label: '8', color: '#ff9900' }, { value: 9.0, label: '9', color: '#ff6600' }, { value: 10.0, label: '10', color: '#ff0000' },
+      { value: 12.0, label: '12', color: '#b00000' }, { value: 13.0, label: '13', color: '#6e0000' }, { value: 15.0, label: '15', color: '#ffffff' }
     ];
 
-    const state = {
-      source: 'KHDC',
-      product: 'DTA',
-      opacity: 0.72,
-      weatherLayer: null,
-      countyContextLayer: null,
-      stateLayer: null,
-      lakeLayer: null,
-      wfoBoundaryLayer: null,
-      cityLayer: null,
-      pinned: false,
-      pinMarker: null,
-      querySeq: 0,
-      lastMoveQuery: 0
-    };
-
+    const state = { source: 'KHDC', product: 'DTA', opacity: 0.72, weatherLayer: null, countyContextLayer: null, stateLayer: null, lakeLayer: null, wfoBoundaryLayer: null, cityLayer: null, pinned: false, pinMarker: null, querySeq: 0, lastMoveQuery: 0 };
     const sampleCanvas = document.createElement('canvas');
     const sampleCtx = sampleCanvas.getContext('2d', { willReadFrequently: true });
 
-    function hexToRgb(hex) {
-      const cleaned = hex.replace('#', '');
-      return { r: parseInt(cleaned.slice(0, 2), 16), g: parseInt(cleaned.slice(2, 4), 16), b: parseInt(cleaned.slice(4, 6), 16) };
-    }
+    function hexToRgb(hex) { const h = hex.replace('#', ''); return { r: parseInt(h.slice(0, 2), 16), g: parseInt(h.slice(2, 4), 16), b: parseInt(h.slice(4, 6), 16) }; }
+    function colorDistance(a, b) { return Math.sqrt((a.r-b.r)**2 + (a.g-b.g)**2 + (a.b-b.b)**2); }
+    function nearestScaleColor(r, g, b) { let best = null, bestDistance = Infinity; PRECIP_SCALE.forEach((item, index) => { const dist = colorDistance({r,g,b}, hexToRgb(item.color)); if (dist < bestDistance) { bestDistance = dist; best = { ...item, index, distance: dist }; } }); return (!best || bestDistance > 105) ? null : best; }
+    function binTextForScaleItem(item) { if (!item) return 'No data'; const next = PRECIP_SCALE[item.index + 1]; return next ? `${item.label}–${next.label} in` : `${item.label}+ in`; }
+    function getRadarLayerName() { return `${RADARS[state.source].station}_${PRODUCTS[state.product].radarLayerCode}`; }
+    function getRadarWmsUrl() { return `https://opengeo.ncep.noaa.gov/geoserver/${RADARS[state.source].station}/ows`; }
+    function setStatus(html) { const el = document.getElementById('status'); if (el) el.innerHTML = html; }
+    function formatLatLng(latlng) { return `${latlng.lat.toFixed(4)}°, ${latlng.lng.toFixed(4)}°`; }
+    function updateReadout(latlng, htmlValue, color, meta) { const valueEl = document.getElementById('readout-value'); valueEl.innerHTML = htmlValue; valueEl.style.color = color || '#555'; document.getElementById('readout-coords').textContent = formatLatLng(latlng); document.getElementById('readout-meta').textContent = meta; }
 
-    function colorDistance(a, b) {
-      return Math.sqrt(Math.pow(a.r - b.r, 2) + Math.pow(a.g - b.g, 2) + Math.pow(a.b - b.b, 2));
-    }
-
-    function nearestScaleColor(r, g, b) {
-      const rgb = { r, g, b };
-      let best = null;
-      let bestDistance = Infinity;
-      PRECIP_SCALE.forEach((item, index) => {
-        const dist = colorDistance(rgb, hexToRgb(item.color));
-        if (dist < bestDistance) { bestDistance = dist; best = { ...item, index, distance: dist }; }
-      });
-      if (!best || bestDistance > 105) return null;
-      return best;
-    }
-
-    function binTextForScaleItem(item) {
-      if (!item) return 'No data';
-      const next = PRECIP_SCALE[item.index + 1];
-      if (!next) return `${item.label}+ in`;
-      return `${item.label}–${next.label} in`;
-    }
-
-    function getRadarLayerName() {
-      return `${RADARS[state.source].station}_${PRODUCTS[state.product].radarLayerCode}`;
-    }
-
-    function getRadarWmsUrl() {
-      return `https://opengeo.ncep.noaa.gov/geoserver/${RADARS[state.source].station}/ows`;
-    }
-
-    function setStatus(html) {
-      const el = document.getElementById('status');
-      if (el) el.innerHTML = html;
-    }
-
-    function formatLatLng(latlng) {
-      return `${latlng.lat.toFixed(4)}°, ${latlng.lng.toFixed(4)}°`;
-    }
-
-    function updateReadout(latlng, htmlValue, color, meta) {
-      const valueEl = document.getElementById('readout-value');
-      valueEl.innerHTML = htmlValue;
-      valueEl.style.color = color || '#555';
-      document.getElementById('readout-coords').textContent = formatLatLng(latlng);
-      document.getElementById('readout-meta').textContent = meta;
-    }
-
-    function clearWeatherLayer() {
-      if (state.weatherLayer && map.hasLayer(state.weatherLayer)) map.removeLayer(state.weatherLayer);
-      state.weatherLayer = null;
-    }
-
+    function clearWeatherLayer() { if (state.weatherLayer && map.hasLayer(state.weatherLayer)) map.removeLayer(state.weatherLayer); state.weatherLayer = null; }
     function loadWeatherLayer() {
       clearWeatherLayer();
       if (state.source === 'MRMS') {
         state.weatherLayer = new ArcGisDynamicLayer({ opacity: state.opacity, tileSize: 256, pane: 'weatherPane', attribution: 'NOAA / NWS MRMS QPE' }).addTo(map);
-        setStatus(`<span class="good">Layer:</span> MRMS QPE`);
+        setStatus(`<span class='good'>Layer:</span> MRMS QPE`);
       } else {
         const layerName = getRadarLayerName();
         state.weatherLayer = L.tileLayer.wms(getRadarWmsUrl(), { layers: layerName, format: 'image/png', transparent: true, version: '1.1.1', opacity: state.opacity, pane: 'weatherPane', crossOrigin: 'anonymous', attribution: 'NOAA / NWS NEXRAD Level III' }).addTo(map);
-        setStatus(`<span class="good">Layer:</span> ${layerName}`);
+        setStatus(`<span class='good'>Layer:</span> ${layerName}`);
       }
       bringReferenceFront();
       buildLegend();
@@ -414,7 +183,7 @@
         if (a < 10) return { ok: true, empty: true, reason: 'transparent/no echo' };
         const match = nearestScaleColor(r, g, b);
         if (!match) return { ok: true, empty: true, reason: `unmatched pixel rgb(${r},${g},${b})` };
-        return { ok: true, empty: false, match, rgb: { r, g, b, a } };
+        return { ok: true, empty: false, match };
       } catch (err) { return { ok: false, reason: `canvas sample blocked: ${err.message}` }; }
     }
 
@@ -424,23 +193,19 @@
       if (seq !== state.querySeq) return;
       if (sampled.ok && !sampled.empty) { updateReadout(latlng, binTextForScaleItem(sampled.match), sampled.match.color, `${state.source} ${PRODUCTS[state.product].label} · sampled display color`); return; }
       if (sampled.ok && sampled.empty) { updateReadout(latlng, 'No data', '#555', `${state.source} ${PRODUCTS[state.product].label} · ${sampled.reason}`); return; }
-      if (state.source === 'MRMS') queryMrmsIdentify(latlng, seq, sampled.reason);
-      else queryWmsFeatureInfo(latlng, seq, sampled.reason);
+      if (state.source === 'MRMS') queryMrmsIdentify(latlng, seq, sampled.reason); else queryWmsFeatureInfo(latlng, seq, sampled.reason);
     }
 
     function queryWmsFeatureInfo(latlng, seq, sampleReason) {
       const point = map.latLngToContainerPoint(latlng);
       const size = map.getSize();
-      const bounds = map.getBounds();
-      const sw = bounds.getSouthWest();
-      const ne = bounds.getNorthEast();
-      const bbox = [sw.lng, sw.lat, ne.lng, ne.lat].join(',');
+      const b = map.getBounds();
+      const bbox = [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()].join(',');
       const layerName = getRadarLayerName();
       const url = `${getRadarWmsUrl()}?service=WMS&version=1.1.1&request=GetFeatureInfo&layers=${encodeURIComponent(layerName)}&query_layers=${encodeURIComponent(layerName)}&styles=&bbox=${encodeURIComponent(bbox)}&width=${size.x}&height=${size.y}&x=${Math.round(point.x)}&y=${Math.round(point.y)}&srs=EPSG:4326&info_format=application/json`;
       fetch(url).then(res => { if (!res.ok) throw new Error(`HTTP ${res.status}`); return res.json(); }).then(data => {
         if (seq !== state.querySeq) return;
-        const props = data?.features?.[0]?.properties || null;
-        const parsed = extractNumericValue(props);
+        const parsed = extractNumericValue(data?.features?.[0]?.properties || null);
         if (parsed === null) throw new Error('no numeric value returned');
         const approx = nearestValueToScale(parsed);
         updateReadout(latlng, `${approx.text}`, approx.color, `${state.source} GetFeatureInfo · sampled failed: ${sampleReason}`);
@@ -449,16 +214,13 @@
 
     function queryMrmsIdentify(latlng, seq, sampleReason) {
       const size = map.getSize();
-      const bounds = map.getBounds();
-      const sw = bounds.getSouthWest();
-      const ne = bounds.getNorthEast();
-      const mapExtent = [sw.lng, sw.lat, ne.lng, ne.lat].join(',');
+      const b = map.getBounds();
+      const mapExtent = [b.getWest(), b.getSouth(), b.getEast(), b.getNorth()].join(',');
       const geometry = `${latlng.lng},${latlng.lat}`;
       const url = `${MRMS_ARCGIS_URL}/identify?f=json&geometry=${encodeURIComponent(geometry)}&geometryType=esriGeometryPoint&sr=4326&layers=all:0&tolerance=3&mapExtent=${encodeURIComponent(mapExtent)}&imageDisplay=${size.x},${size.y},96&returnGeometry=false`;
       fetch(url).then(res => { if (!res.ok) throw new Error(`HTTP ${res.status}`); return res.json(); }).then(data => {
         if (seq !== state.querySeq) return;
-        const props = data?.results?.[0]?.attributes || null;
-        const parsed = extractNumericValue(props);
+        const parsed = extractNumericValue(data?.results?.[0]?.attributes || null);
         if (parsed === null) throw new Error('no numeric value returned');
         const approx = nearestValueToScale(parsed);
         updateReadout(latlng, `${approx.text}`, approx.color, `MRMS identify · sampled failed: ${sampleReason}`);
@@ -468,33 +230,19 @@
     function extractNumericValue(props) {
       if (!props) return null;
       const keys = ['GRAY_INDEX', 'gray_index', 'value', 'VALUE', 'pixel_value', 'Pixel Value', 'PixelValue', 'band_1', 'Band1', 'BAND_1', 'RASTERVALU', 'grid_value'];
-      for (const key of keys) {
-        if (props[key] !== undefined && props[key] !== null) { const num = Number(props[key]); if (!Number.isNaN(num)) return num; }
-      }
+      for (const key of keys) { if (props[key] !== undefined && props[key] !== null) { const num = Number(props[key]); if (!Number.isNaN(num)) return num; } }
       for (const raw of Object.values(props)) { const num = Number(raw); if (!Number.isNaN(num)) return num; }
       return null;
     }
 
-    function nearestValueToScale(value) {
-      let item = PRECIP_SCALE[0];
-      for (const scaleItem of PRECIP_SCALE) if (value >= scaleItem.value) item = scaleItem;
-      return { text: binTextForScaleItem({ ...item, index: PRECIP_SCALE.indexOf(item) }), color: item.color };
-    }
-
-    function buildLegend() {
-      document.getElementById('legend-title').textContent = state.source === 'MRMS' ? `MRMS QPE / ${PRODUCTS[state.product].label}` : `${state.source} ${PRODUCTS[state.product].label}`;
-      document.getElementById('legend-labels').innerHTML = PRECIP_SCALE.map(item => `<span>${item.label}</span>`).join('');
-    }
+    function nearestValueToScale(value) { let item = PRECIP_SCALE[0]; for (const scaleItem of PRECIP_SCALE) if (value >= scaleItem.value) item = scaleItem; return { text: binTextForScaleItem({ ...item, index: PRECIP_SCALE.indexOf(item) }), color: item.color }; }
+    function buildLegend() { document.getElementById('legend-title').textContent = state.source === 'MRMS' ? `MRMS QPE / ${PRODUCTS[state.product].label}` : `${state.source} ${PRODUCTS[state.product].label}`; document.getElementById('legend-labels').innerHTML = PRECIP_SCALE.map(item => `<span>${item.label}</span>`).join(''); }
 
     function featureTouchesLocalBbox(feature) {
       let found = false;
       function scan(coords) {
         if (found) return;
-        if (typeof coords[0] === 'number' && typeof coords[1] === 'number') {
-          const lon = coords[0]; const lat = coords[1];
-          if (lon >= LOCAL_BBOX.west && lon <= LOCAL_BBOX.east && lat >= LOCAL_BBOX.south && lat <= LOCAL_BBOX.north) found = true;
-          return;
-        }
+        if (typeof coords[0] === 'number' && typeof coords[1] === 'number') { const lon = coords[0], lat = coords[1]; if (lon >= LOCAL_BBOX.west && lon <= LOCAL_BBOX.east && lat >= LOCAL_BBOX.south && lat <= LOCAL_BBOX.north) found = true; return; }
         coords.forEach(scan);
       }
       if (feature.geometry && feature.geometry.coordinates) scan(feature.geometry.coordinates);
@@ -504,11 +252,7 @@
     function loadCountyContext() {
       fetch(COUNTY_GEOJSON_URL).then(res => res.json()).then(geojson => {
         const local = { type: 'FeatureCollection', features: geojson.features.filter(featureTouchesLocalBbox) };
-        state.countyContextLayer = L.geoJSON(local, {
-          interactive: false,
-          pane: 'referencePane',
-          style: { color: '#b7b7b7', weight: 0.55, opacity: 0.65, fillOpacity: 0 }
-        }).addTo(map);
+        state.countyContextLayer = L.geoJSON(local, { interactive: false, pane: 'referencePane', style: { color: '#b7b7b7', weight: 0.55, opacity: 0.65, fillOpacity: 0 } }).addTo(map);
         bringReferenceFront();
       }).catch(() => console.warn('County context failed to load'));
     }
@@ -516,20 +260,12 @@
     function loadOfficialLixCwaBoundary() {
       const where = encodeURIComponent("wfo='LIX'");
       const url = `${NWS_REF_MAPSERVER}/1/query?where=${where}&outFields=wfo,cwa,city,state,fullstaid&returnGeometry=true&outSR=4326&f=geojson`;
-
-      fetch(url).then(res => {
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return res.json();
-      }).then(geojson => {
+      fetch(url).then(res => { if (!res.ok) throw new Error(`HTTP ${res.status}`); return res.json(); }).then(geojson => {
         if (!geojson.features || !geojson.features.length) throw new Error('No LIX CWA features returned');
-        state.wfoBoundaryLayer = L.geoJSON(geojson, {
-          interactive: false,
-          pane: 'referencePane',
-          style: { color: '#000000', weight: 3.0, opacity: 0.95, fillOpacity: 0 }
-        }).addTo(map);
+        state.wfoBoundaryLayer = L.geoJSON(geojson, { interactive: false, pane: 'referencePane', style: { color: '#000000', weight: 3.0, opacity: 0.95, fillOpacity: 0 } }).addTo(map);
         bringReferenceFront();
-        setStatus(`<span class="good">Layer:</span> official NWS LIX CWA`);
-      }).catch(err => setStatus(`<span class="bad">Official LIX CWA failed:</span> ${err.message}`));
+        setStatus(`<span class='good'>Layer:</span> official NWS LIX CWA`);
+      }).catch(err => setStatus(`<span class='bad'>Official LIX CWA failed:</span> ${err.message}`));
     }
 
     function loadStateLines() {
@@ -552,9 +288,8 @@
     function addCityLabels() {
       if (state.cityLayer && map.hasLayer(state.cityLayer)) map.removeLayer(state.cityLayer);
       state.cityLayer = L.layerGroup(LIX_CITIES.map(city => L.marker(city.coords, {
-        pane: 'cityPane',
-        interactive: false,
-        icon: L.divIcon({ className: 'city-label', html: `<div class="city-text"><span class="city-dot"></span>${city.name}</div>`, iconSize: [120, 18], iconAnchor: [4, 9] })
+        pane: 'cityPane', interactive: false,
+        icon: L.divIcon({ className: 'city-label', html: `<div class='city-text'><span class='city-dot'></span>${city.name}</div>`, iconSize: [180, 26], iconAnchor: [4, 13] })
       }))).addTo(map);
       bringReferenceFront();
     }
@@ -567,62 +302,20 @@
       if (state.cityLayer) state.cityLayer.eachLayer(layer => layer.setZIndexOffset && layer.setZIndexOffset(1000));
     }
 
-    const Controls = L.Control.extend({
-      options: { position: 'topleft' },
-      onAdd: function() {
-        const div = L.DomUtil.create('div', 'panel');
-        div.innerHTML = `
-          <h1>Precip Accumulation</h1>
-          <label><input type="radio" name="source" value="KHDC" checked> KHDC radar</label>
-          <label><input type="radio" name="source" value="KMOB"> KMOB radar</label>
-          <label><input type="radio" name="source" value="MRMS"> MRMS QPE</label>
-          <div class="section"><label>Product<select id="product-select"><option value="DTA" selected>Storm Total Precip</option><option value="DAA">1 Hour Precip</option></select></label></div>
-          <div class="section"><label>Opacity <span id="opacity-label">72%</span><input id="opacity" type="range" min="0" max="1" step="0.05" value="0.72"></label><button id="refresh" type="button">Refresh</button></div>
-          <div id="status" class="status"></div>`;
-        L.DomEvent.disableClickPropagation(div);
-        L.DomEvent.disableScrollPropagation(div);
-        return div;
-      }
-    });
-
-    const Readout = L.Control.extend({
-      options: { position: 'bottomleft' },
-      onAdd: function() {
-        const div = L.DomUtil.create('div', 'readout');
-        div.innerHTML = `<strong>Cursor Readout</strong><div id="readout-value" class="value">Move cursor</div><div id="readout-coords" class="coords">--</div><div id="readout-meta" class="meta">Samples displayed radar pixel color. Click map to pin; click again to unpin.</div>`;
-        L.DomEvent.disableClickPropagation(div);
-        L.DomEvent.disableScrollPropagation(div);
-        return div;
-      }
-    });
-
-    const Legend = L.Control.extend({
-      options: { position: 'bottomright' },
-      onAdd: function() {
-        const div = L.DomUtil.create('div', 'legend');
-        div.innerHTML = `<div id="legend-title" class="legend-title">Legend</div><div class="legend-bar"></div><div id="legend-labels" class="legend-labels"></div><div class="legend-note">Rainfall accumulation in inches. Readout returns the displayed color bin.</div>`;
-        L.DomEvent.disableClickPropagation(div);
-        L.DomEvent.disableScrollPropagation(div);
-        return div;
-      }
-    });
+    const Controls = L.Control.extend({ options: { position: 'topleft' }, onAdd: function() { const div = L.DomUtil.create('div', 'panel'); div.innerHTML = `<h1>Precip Accumulation</h1><label><input type='radio' name='source' value='KHDC' checked> KHDC radar</label><label><input type='radio' name='source' value='KMOB'> KMOB radar</label><label><input type='radio' name='source' value='MRMS'> MRMS QPE</label><div class='section'><label>Product<select id='product-select'><option value='DTA' selected>Storm Total Precip</option><option value='DAA'>1 Hour Precip</option></select></label></div><div class='section'><label>Opacity <span id='opacity-label'>72%</span><input id='opacity' type='range' min='0' max='1' step='0.05' value='0.72'></label><button id='refresh' type='button'>Refresh</button></div><div id='status' class='status'></div>`; L.DomEvent.disableClickPropagation(div); L.DomEvent.disableScrollPropagation(div); return div; } });
+    const Readout = L.Control.extend({ options: { position: 'bottomleft' }, onAdd: function() { const div = L.DomUtil.create('div', 'readout'); div.innerHTML = `<strong>Cursor Readout</strong><div id='readout-value' class='value'>Move cursor</div><div id='readout-coords' class='coords'>--</div><div id='readout-meta' class='meta'>Samples displayed radar pixel color. Click map to pin; click again to unpin.</div>`; L.DomEvent.disableClickPropagation(div); L.DomEvent.disableScrollPropagation(div); return div; } });
+    const Legend = L.Control.extend({ options: { position: 'bottomright' }, onAdd: function() { const div = L.DomUtil.create('div', 'legend'); div.innerHTML = `<div id='legend-title' class='legend-title'>Legend</div><div class='legend-bar'></div><div id='legend-labels' class='legend-labels'></div><div class='legend-note'>Rainfall accumulation in inches. Readout returns the displayed color bin.</div>`; L.DomEvent.disableClickPropagation(div); L.DomEvent.disableScrollPropagation(div); return div; } });
 
     map.addControl(new Controls());
     map.addControl(new Readout());
     map.addControl(new Legend());
 
-    document.querySelectorAll('input[name="source"]').forEach(input => {
-      input.addEventListener('change', e => { state.source = e.target.value; state.pinned = false; if (state.pinMarker) map.removeLayer(state.pinMarker); state.pinMarker = null; loadWeatherLayer(); });
-    });
-
+    document.querySelectorAll("input[name='source']").forEach(input => input.addEventListener('change', e => { state.source = e.target.value; state.pinned = false; if (state.pinMarker) map.removeLayer(state.pinMarker); state.pinMarker = null; loadWeatherLayer(); }));
     document.getElementById('product-select').addEventListener('change', e => { state.product = e.target.value; state.pinned = false; if (state.pinMarker) map.removeLayer(state.pinMarker); state.pinMarker = null; loadWeatherLayer(); });
-
     document.getElementById('opacity').addEventListener('input', e => { state.opacity = Number(e.target.value); document.getElementById('opacity-label').textContent = `${Math.round(state.opacity * 100)}%`; if (state.weatherLayer && state.weatherLayer.setOpacity) state.weatherLayer.setOpacity(state.opacity); });
-
     document.getElementById('refresh').addEventListener('click', loadWeatherLayer);
 
     map.on('mousemove', e => { if (state.pinned) return; const now = Date.now(); if (now - state.lastMoveQuery < 100) return; state.lastMoveQuery = now; queryAt(e.latlng); });
-
     map.on('click', e => {
       if (state.pinned) { state.pinned = false; if (state.pinMarker) map.removeLayer(state.pinMarker); state.pinMarker = null; updateReadout(e.latlng, 'Unpinned', '#555', 'Move cursor to sample.'); return; }
       state.pinned = true;
